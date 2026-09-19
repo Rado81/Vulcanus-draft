@@ -1,0 +1,319 @@
+/* ============================================================================
+   Vulcanus · undersider i v2. Ligger oven på scrollcraft.css og faelles.css.
+
+   Forsiden slutter med linjen på 30 %: din side er den brede. Undersiderne
+   begynder dér. Linjen står stille: en smal skiferkolonne til venstre
+   (spørgsmålene), bredt papir til højre (svarene). Ingen fastholdte akter og
+   ingen video; det er læsesider. Al højde måles i både vw og svh, så et stort
+   vindue ikke får tom scene omkring lidt indhold.
+   ========================================================================== */
+
+:root {
+  --split: 0.3;
+  --us-kant: clamp(1.25rem, 3vw, 3.5rem);        /* afstand til vinduets kant */
+  --us-luft: clamp(1.75rem, 4.5svh, 3.25rem);    /* luft over og under en række */
+}
+/* En kort side (tak, 404) fylder vinduet: sidefoden står i bunden, og skiferkolonnen når ned til den. */
+body { background: var(--vs-paper); min-height: 100svh; display: flex; flex-direction: column; }
+.us { padding-top: var(--vs-top); flex: 1 0 auto; display: flex; flex-direction: column; }
+.us > .us-qa:last-child { flex: 1 0 auto; }
+
+/* ------------------------------------------------------------------ hero -- */
+.us-hero {
+  position: relative; overflow: clip;
+  display: grid; align-items: end; gap: var(--vs-gap);
+  grid-template-columns: calc(var(--split) * 100%) minmax(0, 1.55fr) minmax(19rem, 1fr);
+  min-height: clamp(26rem, 64svh, 48rem);
+  padding: clamp(2rem, 7svh, 5rem) var(--us-kant) clamp(1.5rem, 5svh, 3.5rem) 0;
+}
+/* Uden formularkort bærer heroen kun H1: lavere, så der ikke står tom scene om et lille kort. */
+.us-hero:not(:has(.us-hero__form)) { min-height: clamp(18rem, 42svh, 32rem); }
+/* Teksten står direkte på billedet i stedet for på papirkort (valgt 2026-09-19; klassen
+   us-hero--paa-billede sættes på alle heroer i templates/side.html). En mørk toning holder hvid tekst læsbar, også hvor billedet er lyst (himmel, væg).
+   Kun på brede skærme; på telefonen står teksten på papir under billedet. */
+@media (min-width: 861px) {
+  .us-hero--paa-billede::after {
+    content: ""; position: absolute; inset: 0; z-index: 0; pointer-events: none;
+    background: linear-gradient(to top, rgb(16 20 24 / 0.82) 0%, rgb(16 20 24 / 0.5) 38%, rgb(16 20 24 / 0) 78%);
+  }
+  /* Med indledning og formular står der tekst højt oppe i billedet: toningen går hele vejen. */
+  .us-hero--paa-billede:has(.us-hero__form)::after {
+    background: linear-gradient(to top, rgb(16 20 24 / 0.88) 0%, rgb(16 20 24 / 0.74) 55%, rgb(16 20 24 / 0.46) 85%, rgb(16 20 24 / 0.3) 100%);
+  }
+  .us-hero--paa-billede .us-hero__linje { z-index: 1; }
+  .us-hero--paa-billede > .us-hero__kort,
+  .us-hero--paa-billede > .us-hero__form {
+    z-index: 1; padding: 0; background: none; box-shadow: none; border-radius: 0; justify-content: flex-end;
+    color: #fff; --sc-accent: #fff; --sc-ink: #fff; --sc-ink-soft: rgb(255 255 255 / 0.84);
+    --sc-hairline: rgb(255 255 255 / 0.3);
+  }
+  /* venstrekanten flugter med brødteksten under heroen */
+  .us-hero--paa-billede > .us-hero__kort { margin-left: calc(var(--split) * var(--us-kant)); }
+  .us-hero--paa-billede .us-hero__kort h1 {
+    font-size: clamp(2.2rem, 1rem + min(3.4vw, 6svh), 4.6rem);
+    text-shadow: 0 1px 24px rgb(0 0 0 / 0.35);
+  }
+  .us-hero--paa-billede:has(.us-hero__form) .us-hero__kort h1 { font-size: clamp(2rem, 1rem + min(2.8vw, 5svh), 4rem); }
+  .us-hero--paa-billede .us-hero__lede { color: #fff; text-shadow: 0 1px 12px rgb(0 0 0 / 0.4); }
+  .us-hero--paa-billede .us-hero__lede .byline { color: rgb(255 255 255 / 0.84); }
+  .us-hero--paa-billede .us-hero__kontakt { margin-top: 1.4rem; font-size: 1.1rem; }
+  .us-hero--paa-billede .us-hero__form > p,
+  .us-hero--paa-billede .us-hero__form .formular-info { color: rgb(255 255 255 / 0.84); }
+  .us-hero--paa-billede .us-hero__form .formular-info a { color: #fff; }
+  .us-hero--paa-billede .us-hero__form .felt input { border-color: transparent; }
+  .us-hero--paa-billede .us-hero__form .felt input:focus-visible,
+  .us-hero--paa-billede .us-hero__form button[type="submit"]:focus-visible { outline-color: #fff; }
+}
+.us-hero__foto { position: absolute; inset: 0; }
+.us-hero__foto img { width: 100%; height: 100%; object-fit: cover; object-position: 30% 50%; }
+.us-hero__foto--kold { clip-path: inset(0 calc((1 - var(--split)) * 100%) 0 0); }
+.us-hero__foto--varm { clip-path: inset(0 0 0 calc(var(--split) * 100%)); }
+.us-hero__linje {
+  position: absolute; top: 0; bottom: 0; left: calc(var(--split) * 100%);
+  width: 2px; margin-left: -1px; background: var(--vs-flame);
+}
+.us-hero__kort, .us-hero__form {
+  position: relative; grid-row: 1;
+  padding: clamp(1.25rem, 2.1vw, 2.25rem);
+  border-radius: var(--sc-r-sm); box-shadow: var(--vs-shadow);
+}
+/* Med formularkort ved siden af: de to kort er lige høje (det højeste bestemmer),
+   står stadig i bunden af heroen, og indholdet er centreret lodret i det laveste. */
+.us-hero:has(.us-hero__form) { align-content: end; align-items: stretch; }
+.us-hero:has(.us-hero__form) > .us-hero__kort,
+.us-hero:has(.us-hero__form) > .us-hero__form { display: flex; flex-direction: column; justify-content: center; }
+/* På billedet er der ingen kort at centrere i: begge blokke står på samme bundlinje.
+   (Kortene og centreringen gælder stadig på telefonen, hvor teksten står på papir.) */
+.us-hero--paa-billede:has(.us-hero__form) > .us-hero__kort,
+.us-hero--paa-billede:has(.us-hero__form) > .us-hero__form { justify-content: flex-end; }
+.us-hero__kort { grid-column: 2; }
+.us-hero__form { grid-column: 3; margin-top: 0; border-top: 0; }
+.us-hero__kort h1 {
+  font-family: var(--sc-font-display); font-weight: 800; text-wrap: balance;
+  font-size: clamp(1.9rem, 1rem + min(2.5vw, 4.2svh), 3.6rem);
+  line-height: 1.02; letter-spacing: -0.03em;
+}
+.us-hero__lede { margin-top: 1rem; max-width: 44rem; font-size: clamp(1.02rem, 0.96rem + 0.3vw, 1.2rem); line-height: 1.5; text-wrap: pretty; }
+.us-hero__lede a { color: var(--sc-accent); text-underline-offset: 0.2em; }
+.us-hero__lede .byline { margin-top: 0.8rem; font-size: 0.875rem; color: var(--sc-ink-soft); }
+.us-hero__kontakt { display: flex; flex-wrap: wrap; gap: 0.4rem 1.5rem; margin-top: 1.1rem; }
+.us-hero__form h2 { font-family: var(--sc-font-display); font-weight: 800; font-size: clamp(1.25rem, 1rem + 0.7vw, 1.7rem); line-height: 1.1; letter-spacing: -0.02em; }
+.us-hero__form > p { margin-top: 0.5rem; color: var(--sc-ink-soft); }
+.us-hero__form .opringning__formular { margin-top: 1rem; grid-template-columns: minmax(0, 1fr); }
+.us-hero__form .felt-raekke { grid-template-columns: minmax(0, 1fr); }
+.us-hero__form button[type="submit"] { grid-column: 1; grid-row: auto; width: 100%; }
+.us-hero__form .formular-info { grid-column: 1; font-size: 0.8rem; line-height: 1.4; color: var(--sc-ink-soft); }
+
+
+/* ----------------------------------------- spørgsmål (skifer) og svar (papir) -- */
+.us-qa { display: grid; grid-template-columns: calc(var(--split) * 100%) minmax(0, 1fr); }
+.us-q, .us-a { padding-block: var(--us-luft); border-bottom: 1px solid var(--sc-hairline); }
+.us-q { padding-inline: var(--us-kant) var(--vs-gap); border-right: 2px solid var(--vs-flame); }
+.us-q h2 {
+  position: sticky; top: calc(var(--vs-top) + 1.5rem);
+  font-family: var(--sc-font-display); font-weight: 800; text-wrap: balance;
+  font-size: clamp(1.2rem, 0.9rem + 0.9vw, 1.9rem); line-height: 1.12; letter-spacing: -0.02em;
+}
+.us-a { padding-inline: var(--vs-gap) var(--us-kant); }
+.us-a__indre { max-width: clamp(47rem, 46vw, 58rem); font-size: clamp(1rem, 0.96rem + 0.2vw, 1.12rem); line-height: 1.6; }
+.us-a__indre > * + * { margin-top: 0.9em; }
+.us-a__indre > p:first-child { font-size: 1.1em; line-height: 1.5; color: var(--sc-ink); }
+.us-a__indre ul, .us-a__indre ol { padding-left: 1.25em; }
+.us-a__indre ul { list-style: disc; }
+.us-a__indre ol { list-style: decimal; }
+.us-a__indre li + li { margin-top: 0.45em; }
+.us-a__indre li::marker { color: var(--vs-flame-deep); font-weight: 700; }
+.us-a__indre a:not(.knap) { color: var(--sc-accent); text-underline-offset: 0.2em; }
+.us-a__indre h3 { font-family: var(--sc-font-display); font-weight: 700; font-size: 1.15rem; margin-top: 1.6em; }
+
+/* the sources' heading is a heading like the others (as on the forside; a small
+   label in the slate column read as an error); only the list itself is small print */
+.us-a--kilder .us-a__indre { font-size: 0.9rem; line-height: 1.5; color: var(--sc-ink-soft); }
+.us-a--kilder .us-a__indre > p:first-child { font-size: inherit; }
+.us-a--kilder li::marker { color: inherit; font-weight: 400; }
+
+/* "Hvorfor vælge os?" (content/hvorfor.md, samme blok som på forsiden): overskriften
+   står i skiferkolonnen som et spørgsmål, de tre svar på papiret. */
+.hvorfor > .ramme { display: grid; grid-template-columns: calc(var(--split) * 100%) minmax(0, 1fr); }
+.hvorfor > .ramme > h3 {
+  margin: 0; padding: var(--us-luft) var(--vs-gap) var(--us-luft) var(--us-kant);
+  background: var(--vs-slate); color: var(--vs-cold-ink); border-right: 2px solid var(--vs-flame);
+  font-family: var(--sc-font-display); font-weight: 800; text-wrap: balance;
+  font-size: clamp(1.2rem, 0.9rem + 0.9vw, 1.9rem); line-height: 1.12; letter-spacing: -0.02em;
+}
+.tre-kol {
+  display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1.75rem 2.25rem;
+  padding: var(--us-luft) var(--us-kant) calc(var(--us-luft) * 1.2) var(--vs-gap);
+}
+/* Vulcanus-mærket over hvert punkt, som på den oprindelige side (assets/favicon.svg). */
+.tre-kol h4 {
+  font-family: var(--sc-font-display); font-weight: 700; font-size: 1.08rem; letter-spacing: -0.01em; line-height: 1.25; margin: 0;
+  padding-top: 3.1rem; background: url(/Vulcanus-draft/assets/favicon.svg) no-repeat center top / auto 2.4rem;
+}
+.tre-kol { text-align: center; }
+.tre-kol p { margin-top: 0.4rem; color: var(--sc-ink-soft); }
+
+
+/* ------------------------------------------------ sider uden billede: H1 på papiret -- */
+.us-qa--titel .us-a { padding-block: clamp(2.5rem, 9svh, 6rem) var(--us-luft); }
+.us-qa--titel h1 {
+  font-family: var(--sc-font-display); font-weight: 800; text-wrap: balance;
+  font-size: clamp(2rem, 1rem + min(3vw, 5svh), 4rem); line-height: 1.02; letter-spacing: -0.03em;
+}
+.us-qa--titel h1 + * { margin-top: 1.25rem; }
+
+
+/* ------------------------------------------------------ indhold inde i et svar -- */
+.us-a__indre h4 { font-family: var(--sc-font-display); font-weight: 700; font-size: 1.08rem; letter-spacing: -0.01em; line-height: 1.25; margin-top: 1.4em; }
+.us-a__indre > h4:first-child { margin-top: 0; }
+.us-a__indre .billede { margin-top: 1.5rem; }
+.us-a__indre .billede img { width: 100%; height: auto; border-radius: var(--sc-r-sm); }
+.overlinje { font: 600 0.72rem/1.4 var(--sc-font-text); letter-spacing: 0.09em; text-transform: uppercase; color: var(--vs-flame-deep); }
+/* Portrættet (Profil): til højre for teksten på brede skærme, højst en tredjedel. */
+.us-a__indre .portraet { float: right; width: min(38%, 19rem); margin: 0.25rem 0 1rem clamp(1.25rem, 2.5vw, 2.5rem); }
+.us-a__indre .portraet img { width: 100%; height: auto; aspect-ratio: 4 / 5; object-fit: cover; border-radius: var(--sc-r-sm); box-shadow: var(--vs-shadow); }
+.us-a__indre .to-kol { clear: both; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1.5rem 2.5rem; margin-top: 1.75rem; }
+.us-a__indre .to-kol .kol > * + * { margin-top: 0.8em; }
+.us-a__indre .to-kol h4 { margin-top: 0; padding-top: 0.8rem; border-top: 2px solid var(--vs-flame); }
+/* Et svar med billedstribe må bruge hele papirets bredde; teksten holder sin linjelængde. */
+.us-a__indre:has(.karrusel) { max-width: none; }
+.us-a__indre:has(.karrusel) > :not(.karrusel) { max-width: clamp(47rem, 46vw, 58rem); }
+
+
+/* ---------------------------------------- billedstribe og lysboks (karrusel.js) -- */
+.karrusel { --synlige: 1; --mellemrum: 10px; position: relative; margin-top: 2rem; }
+.karrusel__vindue { overflow-x: auto; scroll-snap-type: x mandatory; }   /* uden JavaScript: en rulleliste */
+.karrusel__spor { display: flex; gap: var(--mellemrum); transition: transform 0.5s ease; }
+.karrusel__spor--straks { transition: none; }
+.karrusel__slide { flex: 0 0 calc((100% - (var(--synlige) - 1) * var(--mellemrum)) / var(--synlige)); scroll-snap-align: start; }
+.karrusel__slide img { width: 100%; height: auto; aspect-ratio: 4 / 3; object-fit: cover; border-radius: var(--sc-r-sm); }
+.karrusel--aktiv .karrusel__vindue { overflow: hidden; }
+.karrusel__pil {
+  position: absolute; top: calc(50% - 1.75rem); transform: translateY(-50%);
+  width: 2.75rem; height: 2.75rem; padding: 0; border: 0; background: none; cursor: pointer;
+  color: #fff; font-size: 2.5rem; line-height: 1; text-shadow: 0 1px 6px rgb(0 0 0 / 0.6);
+}
+.karrusel__pil--forrige { left: 0.5rem; }
+.karrusel__pil--naeste { right: 0.5rem; }
+.karrusel__prikker { display: flex; justify-content: center; gap: 0.6rem; margin-top: 1rem; }
+.karrusel__prik { width: 0.5rem; height: 0.5rem; padding: 0; border: 0; border-radius: 50%; background: #9a9894; cursor: pointer; }
+.karrusel__prik[aria-current="true"] { background: var(--vs-flame-deep); }
+.karrusel__link { display: block; cursor: zoom-in; }
+@media (min-width: 700px) { .karrusel { --synlige: 2; } }
+@media (min-width: 1025px) { .karrusel { --synlige: 4; } }
+.lysboks { width: 100vw; height: 100vh; max-width: none; max-height: none; margin: 0; padding: 3rem 4rem; border: 0; background: transparent; place-items: center; }
+.lysboks[open] { display: grid; }
+.lysboks::backdrop { background: rgb(0 0 0 / 0.9); }
+.lysboks__billede { max-width: 100%; max-height: calc(100vh - 7rem); width: auto; height: auto; box-shadow: 0 0 30px rgb(0 0 0 / 0.5); }
+.lysboks button { position: fixed; padding: 0; border: 0; background: none; cursor: pointer; color: #fff; line-height: 1; opacity: 0.85; }
+.lysboks button:hover, .lysboks button:focus-visible { opacity: 1; }
+.lysboks__luk { top: 1rem; right: 1.25rem; font-size: 2.5rem; }
+.lysboks__pil { top: 50%; transform: translateY(-50%); font-size: 3.5rem; }
+.lysboks__pil--forrige { left: 1rem; }
+.lysboks__pil--naeste { right: 1rem; }
+.lysboks__taeller { position: fixed; bottom: 1rem; left: 0; right: 0; margin: 0; text-align: center; color: rgb(255 255 255 / 0.8); font-size: 0.85rem; }
+@media (max-width: 699px) {
+  .lysboks { padding: 3rem 0.5rem; }
+  .lysboks__pil { top: auto; bottom: 0.25rem; transform: none; }
+}
+
+
+/* ------------------------------------------------- kontaktsiden: formular og kort -- */
+.skjult { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+.fnugfelt { position: absolute; left: -9999px; }
+.us-formular { max-width: 44rem; }
+.us-formular .felt-raekke { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 0.75rem; }
+.us-formular .felt { margin: 0 0 0.75rem; }
+.us-formular input, .us-formular textarea {
+  width: 100%; min-height: 2.9rem; padding: 0.7rem 0.85rem; font: inherit; color: var(--vs-warm-ink);
+  background: #fff; border: 1px solid color-mix(in oklab, var(--vs-warm-ink) 28%, transparent); border-radius: var(--sc-r-sm);
+}
+.us-formular textarea { resize: vertical; min-height: 9rem; }
+.us-formular input::placeholder, .us-formular textarea::placeholder { color: var(--vs-warm-soft); }
+.us-formular input:focus-visible, .us-formular textarea:focus-visible { outline: 2px solid var(--vs-warm-ink); outline-offset: 1px; }
+.us-formular .formular-info { font-size: 0.85rem; line-height: 1.45; color: var(--sc-ink-soft); }
+.us-formular button[type="submit"] {
+  display: inline-flex; align-items: center; justify-content: center; min-height: 3.25rem; margin-top: 1rem; padding: 0.7rem 1.8rem;
+  border: 0; border-radius: var(--sc-r-sm); background: var(--vs-flame-deep); color: #fff; font: inherit; font-weight: 700; cursor: pointer;
+}
+.us-formular form ~ p { font-size: 0.85rem; color: var(--sc-ink-soft); }
+@media (hover: hover) and (pointer: fine) { .us-formular button[type="submit"]:hover { background: #a62405; } }
+.us-kontaktinfo .kontaktkort__links a { font-weight: 700; font-size: 1.1rem; }
+.kortudsnit { margin-top: 1.5rem; max-width: 44rem; }
+.kortudsnit__ramme { aspect-ratio: 16 / 9; background: color-mix(in oklab, var(--vs-warm-ink) 8%, var(--vs-paper)); border-radius: var(--sc-r-sm); overflow: hidden; }
+.kortudsnit iframe { display: block; width: 100%; height: 100%; border: 0; }
+.kortudsnit > p { margin-top: 0.5rem; font-size: 0.9rem; }
+.kortudsnit__samtykke { height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 1rem; padding: 1.5rem; text-align: center; font-size: 0.95rem; }
+
+
+/* ------------------------------------ måler ([[MAALER:…]] i en indholdsfil) --
+   Forsidens måler som en rolig figur: bjælken fyldes til tallet og standser
+   under grænsen. Bjælken er SVG (bredden er en attribut, ikke en inline-stil:
+   CSP), og assets/js/faelles.js tæller tallet og --g op én gang. Uden JavaScript
+   står den fyldt. Grænsen står på 50 %: render.py afviser en anden grænsetekst. */
+.maaler { margin-top: 1.75rem; max-width: 38rem; padding-top: 1rem; border-top: 2px solid var(--vs-flame); }
+.maaler__tekst { font: 600 0.72rem/1.4 var(--sc-font-text); letter-spacing: 0.09em; text-transform: uppercase; color: var(--sc-ink-soft); }
+.maaler__tal {
+  margin-top: 0.35rem; font-family: var(--sc-font-display); font-weight: 800; font-variant-numeric: tabular-nums;
+  font-size: clamp(2.6rem, 1.6rem + 3vw, 4.2rem); line-height: 1; letter-spacing: -0.03em; color: var(--sc-ink);
+}
+.maaler__bane { position: relative; margin-top: 1.1rem; padding-bottom: 1.9rem; }
+.maaler__bane svg { display: block; width: 100%; height: 0.6rem; border-radius: 2px; background: color-mix(in oklab, var(--vs-warm-ink) 11%, transparent); }
+.maaler__fyld { fill: var(--vs-flame); transform-box: fill-box; transform-origin: 0 50%; transform: scaleX(var(--g, 1)); }
+.maaler__graense { position: absolute; left: 50%; top: -0.55rem; bottom: 0; border-left: 1px dashed var(--vs-warm-ink); }
+.maaler__graense span { position: absolute; left: 0.5rem; bottom: 0; white-space: nowrap; font: 600 0.78rem/1.2 var(--sc-font-text); color: var(--sc-ink); }
+@media (max-width: 860px) { .maaler__graense span { left: auto; right: 0.5rem; } }
+
+
+/* ------------------------------------------------------------- indtoning -- */
+.us-js [data-us-ind] { opacity: 0; transform: translateY(0.6rem); transition: opacity 420ms var(--sc-ease-out), transform 420ms var(--sc-ease-out); }
+.us-js [data-us-ind].er-inde { opacity: 1; transform: none; }
+
+
+/* ---------------------------------------------------------------- sidefod -- */
+.us-fod { padding: clamp(2.5rem, 7svh, 4.5rem) var(--us-kant) 1.5rem; border-top: 2px solid var(--vs-flame); font-size: 0.95rem; }
+.us-fod__kolonner { display: grid; gap: 2rem clamp(2rem, 5vw, 5rem); grid-template-columns: 1.5fr 1fr 1fr; }
+.us-fod__titel { font: 600 0.72rem/1.3 var(--sc-font-text); letter-spacing: 0.09em; text-transform: uppercase; color: var(--sc-ink-soft); margin-bottom: 0.9rem; }
+.us-fod p + p { margin-top: 0.8rem; }
+.us-fod a { color: inherit; text-underline-offset: 0.2em; }
+.us-fod li + li { margin-top: 0.4rem; }
+.us-fod li a { text-decoration: none; }
+.us-fod__bund { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 0.5rem 1rem; margin-top: 2.25rem; padding-top: 1rem; border-top: 1px solid var(--sc-hairline); font-size: 0.85rem; color: var(--sc-ink-soft); }
+.us-fod .linkknap { background: none; border: 0; padding: 0; cursor: pointer; font: inherit; color: inherit; text-decoration: underline; }
+@media (hover: hover) and (pointer: fine) {
+  .us-fod li a:hover { text-decoration: underline; }
+}
+
+
+/* ================================================================ TELEFON ==== */
+@media (max-width: 860px) {
+  .us-hero { display: block; min-height: 0; padding: 0; }
+  .us-hero__foto { height: 36svh; }
+  .us-hero__foto--varm { position: relative; }
+  .us-hero__foto--kold { position: absolute; inset: 0 0 auto 0; z-index: 1; }
+  .us-hero__linje { top: 0; bottom: auto; height: 36svh; z-index: 2; }
+  /* 30 % af en telefon kan ikke bære et sidenavn; H1 står lige under skiltet. */
+  .vs-plate--cold .vs-plate__at { visibility: hidden; }
+  .us-hero__kort, .us-hero__form { border-radius: 0; box-shadow: none; padding: 1.5rem var(--us-kant); }
+  .us-hero__kort { border-top: 2px solid var(--vs-flame); }
+  .us-hero__form { border-top: 1px solid var(--sc-hairline); }
+  .us-qa { display: block; }
+  .us-q { border-right: 0; border-bottom: 0; border-left: 3px solid var(--vs-flame); padding: 1.4rem var(--us-kant) 1.2rem; }
+  .us-q h2 { position: static; }
+  .us-a { padding: 1.4rem var(--us-kant) 2rem; }
+  .us-qa--titel .us-q, .us-q:empty { display: none; }
+  .us-qa--titel .us-a { padding-top: 2rem; }
+  .us-a__indre .portraet { float: none; width: min(100%, 19rem); margin: 0 0 1.25rem; }
+  .us-a__indre .to-kol { grid-template-columns: minmax(0, 1fr); }
+  .us-formular .felt-raekke { grid-template-columns: minmax(0, 1fr); }
+  .hvorfor > .ramme { display: block; }
+  .hvorfor > .ramme > h3 { border-right: 0; border-left: 3px solid var(--vs-flame); padding: 1.4rem var(--us-kant) 1.2rem; }
+  .tre-kol { grid-template-columns: minmax(0, 1fr); gap: 1.25rem; padding: 1.4rem var(--us-kant) 2rem; }
+  .us-fod__kolonner { grid-template-columns: minmax(0, 1fr); }
+}
+
+/* Mellembredder: kortet med formularen går under heroens kort. */
+@media (min-width: 861px) and (max-width: 1180px) {
+  .us-hero { grid-template-columns: calc(var(--split) * 100%) minmax(0, 1fr); }
+  .us-hero__form { grid-column: 2; grid-row: 2; }
+}

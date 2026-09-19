@@ -1,0 +1,972 @@
+/* ============================================================================
+   Vulcanus · forsiden ("To sider"). Ligger oven på scrollcraft.css og faelles.css.
+
+   Grammar: split stage. Two grounds, one per side, and they hold. The insurer's
+   side is overcast slate, yours is warm-white paper, and one flame line runs
+   between them. to-sider.js writes --split (0..1) on <html>; everything that
+   follows the line reads it. The line only ever moves inside pinned stages, and
+   only through clip-path and transform, so nothing reflows while it travels.
+   ========================================================================== */
+
+
+/* Farver, skrift, knapper, skiltet, menuen og formularen står i faelles.css. */
+:root {
+  /* Defaults are the SETTLED states, so the page reads without JavaScript. */
+  --h: 0; --wipe: 0; --mx: 0; --my: 0; --g: 0.452; --jan-t: 1;
+}
+
+
+/* --------------------------------------------------- pinned split stages -- */
+.vs-split { background: var(--vs-paper); container-type: inline-size; }
+.vs-side { position: absolute; inset: 0; }
+.vs-side--cold { clip-path: inset(0 calc((1 - var(--split)) * 100%) 0 0); }
+.vs-side--warm { clip-path: inset(0 0 0 calc(var(--split) * 100%)); }
+.vs-layer { position: absolute; inset: 0; z-index: 25; }
+
+/* ------------------------------------------------------------- 1 · hero -- */
+.vs-photo { position: absolute; inset: 0; overflow: clip; }
+/* both photographs fold into the line */
+.vs-side--cold .vs-photo { clip-path: inset(0 0 0 calc(var(--wipe) * var(--split) * 100%)); }
+.vs-side--warm .vs-photo { clip-path: inset(0 calc(var(--wipe) * (1 - var(--split)) * 100%) 0 0); }
+
+/* A 3:2 box that covers the stage and is pinned to its FLOOR, so the near plane
+   is in frame on every aspect ratio and only the ceiling is ever cropped. Plate
+   and near plane share this box, which is what keeps them registered. */
+.vs-cover {
+  --art-x: 0%;
+  position: absolute; left: 50%; bottom: 0;
+  width: max(100%, calc(100svh * 1.5)); aspect-ratio: 3 / 2;
+  translate: calc(-50% + var(--art-x)) 0;
+  transform-origin: calc(50% - var(--art-x)) 100%;
+  will-change: transform;
+}
+.vs-cover img { width: 100%; height: 100%; max-width: none; }
+/* ONE room, so both sides take exactly the same transform. They used to scale
+   apart with the scroll (their view held still, yours came closer); over a
+   still that read as two views, over the moving clip it read as two clips out
+   of step. The line divides the grade and nothing else. */
+.vs-side .vs-cover { transform: translate3d(calc(var(--mx) * -5px), calc(var(--my) * -3px), 0) scale(calc(1.05 + 0.03 * var(--h))); }
+/* The near plane only ever moves UP and over what it hides, so the plate's own
+   copy of the armrest stays behind it. Opacity is the only thing it transitions. */
+.vs-side .vs-cover--near {
+  transform: translate3d(calc(var(--mx) * 9px), calc(var(--h) * -64px + var(--my) * 5px), 0) scale(1.05);
+}
+/* Out of flow. An aspect-ratio box grows to contain its content, so a taller
+   in-flow image stretches the box and, floor-anchored, shoves the plane UP off
+   its registration with the plate. */
+.vs-cover--near img { position: absolute; left: 0; top: 0; height: calc(100% * 1164 / 1024); }
+/* The slow inner zoom of the original forside hero (style.css: hero-zoom,
+   1 -> 1.1 over 20s, ease-out, then it rests). Time-based and on the IMAGES; the
+   scroll-driven depth above lives on their wrappers, so the two never fight.
+   All three images zoom about the same point of the STAGE, which is what keeps
+   the room continuous across the line and the near plane registered with the
+   plate under it. The near image is taller than its box (it extends below the
+   floor), so the same point is a smaller share of ITS height. */
+.vs-cover :is(img, video, canvas) {
+  transform-origin: calc(50% - var(--art-x)) 55%;
+  animation: vs-zoom 20s ease-out 200ms both;
+  will-change: transform;
+}
+.vs-cover--near img { transform-origin: calc(50% - var(--art-x)) calc(55% * 1024 / 1164); }
+@keyframes vs-zoom { from { transform: scale(1); } to { transform: scale(1.1); } }
+
+/* The scrubbed clip lies over its poster in the same box with the same zoom, so
+   the swap is a change of frame and not of framing. The engine places and
+   reveals the <video>. The cold side's canvas mirrors it (forside.js) and is
+   graded here to the cold still: kold() in forside_billeder.py is saturation
+   0.14, a blue-grey cast and 0.90 brightness, taken from the ungraded picture;
+   these values get there from the warm clip. A flat multiply is the cast. */
+.vs-spejl, .vs-spejl-stik {
+  position: absolute; inset: 0; width: 100%; height: 100%; max-width: none;
+  opacity: 0; transition: opacity 380ms var(--sc-ease-out);
+}
+.vs-spejl--kold { filter: saturate(0.12) brightness(0.95); }
+.vs-spejl-stik { background: rgb(209 227 255); mix-blend-mode: multiply; }
+.vs-har-spejl :is(.vs-spejl, .vs-spejl-stik) { opacity: 1; }
+/* The near plane is a cut-out of the STILL. The clip moves the armrest itself,
+   so once the clip shows, the cut-out would be a second armrest. */
+.vs-side .vs-cover--near { transition: opacity 380ms var(--sc-ease-out); }
+.vs-har-spejl .vs-cover--near { opacity: 0; }
+.vs-hero-scrim { position: absolute; inset: 0; pointer-events: none; }
+.vs-side--cold .vs-hero-scrim { background: linear-gradient(to top, rgb(16 21 26 / 0.5) 0%, rgb(16 21 26 / 0.66) 22%, rgb(16 21 26 / 0.5) 40%, rgb(16 21 26 / 0) 60%); }
+.vs-side--warm .vs-hero-scrim { background: linear-gradient(to top, rgb(22 16 11 / 0.5) 0%, rgb(22 16 11 / 0.66) 22%, rgb(22 16 11 / 0.5) 40%, rgb(22 16 11 / 0) 60%); }
+
+.vs-hero-a { color: #fff; z-index: 25; }
+.vs-h1.vs-hero-a { position: static; }
+.vs-h1__l, .vs-h1__r { position: absolute; z-index: 25; bottom: 34svh; overflow: hidden; padding-bottom: 0.12em; }
+.vs-h1__l { right: calc(50% + var(--vs-gap)); text-align: right; }
+.vs-h1__r { left: calc(50% + var(--vs-gap)); }
+.vs-h1__l > span, .vs-h1__r > span { display: inline-block; animation: vs-rise 900ms var(--sc-ease-out) 120ms both; }
+.vs-h1__r > span { animation-delay: 260ms; }
+@keyframes vs-rise { from { transform: translate3d(0, 104%, 0); } to { transform: none; } }
+.vs-sub {
+  position: absolute; top: calc(66svh + 0.9rem); max-width: 21rem;
+  font-size: clamp(1.02rem, 0.95rem + 0.35vw, 1.22rem); line-height: 1.45; color: rgb(255 255 255 / 0.92);
+}
+.vs-sub > span { display: block; animation: vs-fade 900ms var(--sc-ease-out) 520ms both; }
+@keyframes vs-fade { from { opacity: 0; } to { opacity: 1; } }
+.vs-sub--l { right: calc(50% + var(--vs-gap)); text-align: right; }
+.vs-sub--r { left: calc(50% + var(--vs-gap)); }
+.vs-hero-cta { display: none; }
+/* The arrow of the original forside (style.css: .hero__pil), at the foot of the
+   line. Centred with a margin: the engine's cue owns the element's transform.
+   The bounce is on the drawing for the same reason. */
+.vs-pil {
+  position: absolute; left: 50%; bottom: 1.25rem; width: 3rem; height: 3rem;
+  margin-left: -1.5rem; padding: 0.6rem; color: #fff;
+  /* A plate ABOVE the line (.vs-seam is 30), because the line runs straight
+     through the arrow's shaft. No ring around it (Rado, 2026-09-19): only the arrow. */
+  z-index: 31;
+  border-radius: 50%; background: rgb(18 16 14 / 0.72); border: 0;
+  box-shadow: 0 4px 14px rgb(0 0 0 / 0.35);
+}
+.vs-pil:hover { background: var(--sc-accent); }
+.vs-pil svg {
+  width: 100%; height: 100%; fill: currentColor;
+  animation: vs-pil 2s ease-in-out infinite;
+}
+@keyframes vs-pil { 0%, 100% { translate: 0 -0.12rem; } 50% { translate: 0 0.2rem; } }
+
+.vs-beat { position: absolute; z-index: 25; top: 40svh; font-size: clamp(1.15rem, 1rem + 0.7vw, 1.6rem); line-height: 1.42; letter-spacing: -0.012em; text-wrap: pretty; }
+.vs-beat--l { right: calc(50% + 2.25rem); max-width: 25rem; text-align: right; color: var(--vs-cold-ink); }
+.vs-beat--r { left: calc(50% + 2.25rem); max-width: 29rem; color: var(--vs-warm-ink); }
+
+/* ------------------------------------------------- flow: two columns hold -- */
+.vs-flow {
+  --fs: 0.5;
+  position: relative; display: grid;
+  grid-template-columns: calc(var(--fs) * 100%) minmax(0, 1fr);
+}
+.vs-flow::after {                     /* the line, through the document */
+  content: ""; position: absolute; top: 0; bottom: 0; left: calc(var(--fs) * 100% - 1px);
+  width: 2px; background: var(--vs-flame); z-index: 5; pointer-events: none;
+}
+.vs-cell { min-width: 0; }
+.vs-cell--cold { padding-left: var(--sc-gutter); padding-right: 2.25rem; text-align: right; }
+.vs-cell--warm { padding-left: 2.25rem; padding-right: var(--sc-gutter); }
+
+/* 2 · ledger */
+.vs-ledger__photo { padding-top: 0; padding-bottom: 0; }
+.vs-ledger__photo.vs-cell--cold { padding-right: 0; }
+.vs-ledger__photo.vs-cell--warm { padding-left: 0; }
+.vs-ledger__photo img { width: 100%; height: auto; aspect-ratio: 3 / 2; object-fit: cover; }
+.vs-ledger__head { padding-top: clamp(3.5rem, 7vw, 6rem); padding-bottom: 2rem; }
+.vs-ledger__head .vs-h2 { max-width: 16ch; }
+.vs-cell--cold.vs-ledger__head .vs-h2 { margin-left: auto; }
+.vs-row { padding-top: 1.3rem; padding-bottom: 1.3rem; position: relative; }
+.vs-row::before {                    /* ruled like the document it is about */
+  content: ""; position: absolute; top: 0; height: 1px; background: var(--sc-hairline);
+  left: var(--sc-gutter); right: 0;
+}
+.vs-cell--warm.vs-row::before { left: 0; right: var(--sc-gutter); }
+.vs-row p { max-width: 34rem; text-wrap: pretty; }
+.vs-cell--cold.vs-row p { margin-left: auto; }
+.vs-row__claim { font-family: var(--sc-font-display); font-weight: 700; font-size: clamp(1.05rem, 0.95rem + 0.45vw, 1.3rem); line-height: 1.3; letter-spacing: -0.012em; }
+.vs-cell--warm.vs-row p { color: var(--sc-ink-soft); }
+.vs-row--last { padding-bottom: clamp(4rem, 8vw, 7rem); }
+
+/* 4 · the quiet one. The air is the content. */
+.vs-quiet { min-height: 76svh; }
+.vs-quiet .vs-cell { padding-block: 4rem; display: flex; align-items: center; }
+.vs-quiet .vs-cell--cold { justify-content: flex-end; }
+.vs-quiet .vs-lede { max-width: 22rem; }
+
+/* ------------------------------------------- pinned acts: the picture behind -- */
+/* A pinned act holds a whole screen, and a flat plate behind a few lines of
+   copy is a screen of nothing. Each side carries a picture in its own grade,
+   full bleed, cut by the line like the hero. The veil is the side's own plate
+   colour and is heaviest where that side's copy sits (towards the line), so the
+   picture is clearest at the outer edge. */
+.vs-bag { position: absolute; inset: 0; overflow: clip; }
+.vs-bag :is(img, video, canvas) {
+  position: absolute; inset: 0; width: 100%; height: 100%; max-width: none; object-fit: cover;
+}
+.vs-bag::after { content: ""; position: absolute; inset: 0; }
+.vs-side--cold .vs-bag::after { background: linear-gradient(to right, rgb(30 37 43 / 0.42) 0%, rgb(30 37 43 / 0.7) 26%, rgb(30 37 43 / 0.86) 50%); }
+.vs-side--warm .vs-bag::after { background: linear-gradient(to right, rgb(246 243 237 / 0.8) 50%, rgb(246 243 237 / 0.62) 74%, rgb(246 243 237 / 0.3) 100%); }
+/* The stills breathe with the scroll: the engine publishes the act's progress. */
+.vs-bag--still img { transform: scale(calc(1.03 + 0.05 * var(--sc-p, 0))); transform-origin: 50% 60%; will-change: transform; }
+
+/* -------------------------------------------------------------- 3 · gauge -- */
+.vs-gauge { position: absolute; inset: 0; z-index: 31; pointer-events: none; }
+.vs-gauge__ticks {
+  position: absolute; left: calc(50% - 7px); width: 14px; top: 0; bottom: 0;
+  background: repeating-linear-gradient(to top, #8a949c 0 1px, transparent 1px 10%);
+}
+.vs-gauge__fill {
+  position: absolute; left: calc(50% - 3px); width: 6px; top: 0; bottom: 0;
+  background: var(--vs-flame); transform-origin: 50% 100%; transform: scaleY(var(--g));
+}
+.vs-gauge__limit { position: absolute; left: 0; right: 0; top: 50%; border-top: 1px dashed var(--vs-flame); }
+.vs-gauge__limit span {
+  position: absolute; left: calc(50% + 2.25rem); bottom: 0.5rem;
+  font-family: var(--sc-font-text); font-weight: 600; font-size: 0.72rem; letter-spacing: 0.09em;
+  text-transform: uppercase; color: var(--vs-warm-soft); white-space: nowrap;
+}
+/* The reading hangs from the top of the fill and rides up with it. */
+.vs-gauge-read {
+  position: absolute; right: calc(50% + 2.25rem); top: 100%; width: min(25rem, 40%);
+  text-align: right; transform: translate3d(0, calc(var(--g) * -100svh), 0);
+}
+.vs-gauge-read__lead { padding-top: 0.2rem; color: var(--vs-cold-soft); max-width: 17rem; margin-left: auto; }
+.vs-gauge-read__num {
+  font-family: var(--sc-font-display); font-weight: 800; font-variant-numeric: tabular-nums;
+  font-size: clamp(3.4rem, 1.4rem + 7vw, 7.5rem); line-height: 1; letter-spacing: -0.04em; margin-top: 0.35rem;
+}
+.vs-gauge-note { margin-top: 0.9rem; color: var(--vs-cold-soft); }
+.vs-gauge-intro, .vs-gauge-result { position: absolute; left: calc(50% + 2.25rem); max-width: 28rem; }
+.vs-gauge-intro { top: calc(var(--vs-top) + clamp(2.5rem, 7svh, 4.5rem)); }
+.vs-gauge-result { top: calc(50svh + 2.25rem); }
+.vs-gauge-intro .vs-lede, .vs-gauge-result .vs-lede { margin-top: 1rem; color: var(--sc-ink-soft); }
+.vs-source { margin-top: 1rem; font-size: 0.875rem; }
+.vs-source a { color: var(--sc-accent); }
+
+/* --------------------------------------------------------------- 5 · peak -- */
+.vs-act--peak { --jan-w: clamp(10rem, 17.5vw, 17rem); --jan-top: 44svh; --ride-base: 0.5; }
+.vs-peak__head { position: absolute; top: calc(var(--vs-top) + clamp(2.5rem, 8svh, 5rem)); max-width: min(33rem, calc(50% - var(--sc-gutter) * 2)); }
+.vs-peak__head--l { left: var(--sc-gutter); color: var(--vs-cold-ink); }
+.vs-peak__head--r { left: calc(50% + var(--sc-gutter)); }
+.vs-seat, .vs-jan {
+  position: absolute; top: var(--jan-top); left: var(--sc-gutter);
+  width: var(--jan-w); aspect-ratio: 760 / 859; border-radius: var(--sc-r-sm);
+}
+.vs-seat { border: 1px dashed var(--sc-hairline-strong); }
+.vs-side--cold .vs-seat { --sc-hairline-strong: color-mix(in oklab, var(--vs-cold-ink) 34%, transparent); }
+.vs-side--warm .vs-seat { --sc-hairline-strong: color-mix(in oklab, var(--vs-warm-ink) 30%, transparent); }
+.vs-seat--to { left: calc(50% + var(--sc-gutter)); }
+/* THE SIGNATURE MOVE. The same portrait lives in both sides, graded for each, and
+   both copies take the same transform. Each side is clipped at the line, so the
+   line re-grades him as he crosses it: grey on their side, colour on yours. The
+   figure is a full-width track so that 50 % means half the page, not half of him. */
+.vs-jan {
+  inset: 0; width: auto; aspect-ratio: auto; border-radius: 0; pointer-events: none;
+  transform: translate3d(calc(var(--jan-t) * 50%), 0, 0);
+  will-change: transform;
+}
+.vs-jan img {
+  position: absolute; top: var(--jan-top); left: var(--sc-gutter);
+  width: var(--jan-w); height: auto; aspect-ratio: 760 / 859; max-width: none;
+  border-radius: var(--sc-r-sm); box-shadow: var(--vs-shadow);
+}
+.vs-seat-label {
+  position: absolute; left: var(--sc-gutter); top: calc(var(--jan-top) + var(--jan-w) * 859 / 760 + 0.9rem);
+  max-width: 19rem; font-size: 0.95rem; color: var(--vs-cold-soft);
+}
+.vs-peak__body {
+  position: absolute; top: var(--jan-top);
+  left: calc(50% + var(--sc-gutter) + var(--jan-w) + 2rem); right: var(--sc-gutter); max-width: 24rem;
+  color: var(--sc-ink-soft);
+}
+.vs-peak__body p + p { margin-top: 1rem; }
+.vs-peak__creds {
+  position: absolute; top: var(--jan-top); left: calc(30% + 2.25rem);
+  width: calc(20% + var(--sc-gutter) - 2.25rem - 2rem); font-size: 0.95rem; color: var(--sc-ink-soft);
+}
+.vs-peak__creds li { padding-block: 0.7rem; border-top: 1px solid var(--sc-hairline); text-wrap: pretty; }
+.vs-peak__creds li:last-child { border-bottom: 1px solid var(--sc-hairline); }
+/* Everything on their side rides away with the line when it gives. cqw, not vw:
+   the stage is the ruler the line is measured on, and vw includes the scrollbar. */
+.vs-act--peak .vs-side--cold > :not(.vs-jan), .vs-close__last {
+  translate: calc((var(--split) - var(--ride-base)) * 100cqw) 0;
+}
+
+/* ------------------------------------------------------------ 6 · process -- */
+.vs-process .vs-cell { padding-top: clamp(4rem, 8vw, 7rem); padding-bottom: clamp(4rem, 8vw, 7rem); }
+.vs-process__cold { text-align: left; padding-right: 2.25rem; }
+.vs-process__cold .vs-facts { position: sticky; top: calc(var(--vs-top) + 2.5rem); }
+.vs-facts__title { color: var(--sc-ink-soft); margin-bottom: 1rem; }
+.vs-facts dl > div { padding-block: 0.8rem; border-top: 1px solid var(--sc-hairline); }
+.vs-facts dl > div:last-child { border-bottom: 1px solid var(--sc-hairline); }
+.vs-facts dt { color: var(--sc-ink-soft); margin-bottom: 0.25rem; }
+.vs-facts dd { font-size: 1rem; line-height: 1.45; text-wrap: pretty; }
+.vs-facts--warm dl { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); column-gap: 1.5rem; }
+.vs-facts--warm dl > div { border-bottom: 1px solid var(--sc-hairline); }
+.vs-facts--warm dd { font-family: var(--sc-font-display); font-weight: 700; letter-spacing: -0.01em; }
+.vs-process__block {
+  display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr);
+  gap: clamp(2rem, 4vw, 4rem); align-items: start; margin-top: clamp(4rem, 8vw, 7rem);
+}
+.vs-process__block--flip { grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr); align-items: center; }
+.vs-process__text > * + * { margin-top: 1.1rem; }
+.vs-process__text .vs-lede { color: var(--sc-ink-soft); }
+.vs-process__photo img { width: 100%; height: auto; aspect-ratio: 4 / 5; object-fit: cover; border-radius: var(--sc-r-sm); }
+.vs-process__block--flip .vs-process__photo img { aspect-ratio: 1 / 1; object-position: 62% 50%; }
+.vs-steps { counter-reset: step; margin-top: 1.75rem; }
+.vs-steps li {
+  counter-increment: step; display: grid; grid-template-columns: 2.25rem 1fr; align-items: baseline;
+  padding-block: 0.62rem; border-top: 1px solid var(--sc-hairline);
+  font-family: var(--sc-font-display); font-weight: 700; font-size: 1.08rem; letter-spacing: -0.01em;
+}
+.vs-steps li:last-child { border-bottom: 1px solid var(--sc-hairline); }
+.vs-steps li::before {
+  content: counter(step); font-family: var(--sc-font-text); font-weight: 600; font-size: 0.78rem;
+  font-variant-numeric: tabular-nums; color: var(--sc-ink-soft);
+}
+.vs-small { color: var(--sc-ink-soft); }
+.vs-types { columns: 2; column-gap: 2rem; margin-top: 1.5rem; }
+.vs-types li { break-inside: avoid; padding-block: 0.5rem; border-top: 1px solid var(--sc-hairline); }
+.vs-links { display: grid; gap: 0.6rem; margin-top: 2rem; justify-items: start; }
+
+/* -------------------------------------------------------------- 7 · close -- */
+.vs-act--close { --ride-base: 0.3; }
+.vs-close__last {
+  position: absolute; left: var(--sc-gutter); bottom: 22svh; width: calc(30% - var(--sc-gutter) - 2.25rem);
+  font-family: var(--sc-font-display); font-weight: 700; font-size: clamp(1.1rem, 0.9rem + 0.8vw, 1.5rem);
+  line-height: 1.25; letter-spacing: -0.015em; text-wrap: balance;
+}
+.vs-close__photo { position: absolute; right: var(--sc-gutter); top: calc(var(--vs-top) + 7svh); width: min(38%, 34rem); }
+.vs-close__photo img { width: 100%; height: auto; aspect-ratio: 5 / 4; object-fit: cover; border-radius: var(--sc-r-sm); box-shadow: var(--vs-shadow); }
+.vs-close__copy { position: absolute; left: var(--sc-gutter); top: calc(var(--vs-top) + 12svh); width: min(48%, 40rem); }
+.vs-close__title { font-size: clamp(2.3rem, 1rem + 4.3vw, 4.75rem); text-wrap: balance; }
+.vs-close__rest { margin-top: 1.5rem; }
+.vs-close__rest .vs-lede { max-width: 31rem; color: var(--sc-ink-soft); }
+.vs-close__actions { display: flex; flex-wrap: wrap; align-items: center; gap: 0.9rem 1.6rem; margin-top: 1.9rem; }
+.vs-close__rest .vs-small { margin-top: 1.4rem; }
+.vs-foot {
+  position: absolute; left: var(--sc-gutter); right: var(--sc-gutter); bottom: 1.4rem;
+  display: flex; flex-wrap: wrap; justify-content: space-between; gap: 0.5rem 2rem;
+  padding-top: 1rem; border-top: 1px solid var(--sc-hairline);
+  font-size: 0.82rem; color: var(--sc-ink-soft);
+}
+.vs-foot nav { display: flex; flex-wrap: wrap; gap: 0.3rem 1.2rem; }
+.vs-foot a { display: inline-flex; align-items: center; min-height: 1.75rem; text-decoration: none; }
+@media (hover: hover) and (pointer: fine) { .vs-foot a:hover { color: var(--sc-ink); text-decoration: underline; } }
+
+/* ================================================================ PHONE ====
+   Not the desktop page made smaller. The split turns top and bottom: their side
+   above, yours below and nearest the thumb, and your side RISES until it has the
+   screen. Flow acts stack as bands, claim then answer. */
+@media (max-width: 860px) {
+  :root { --vs-top: 2.75rem; --vs-gap: 0.85rem;
+    --seam-y: calc(var(--vs-top) + var(--split) * (100svh - var(--vs-top))); }
+
+
+  .vs-side--cold { clip-path: inset(0 0 calc(100% - var(--seam-y)) 0); }
+  .vs-side--warm { clip-path: inset(var(--seam-y) 0 0 0); }
+
+
+  /* hero: keep the window in frame, and fold the photographs into the horizontal line */
+  .vs-cover { --art-x: 25%; }
+  .vs-side--cold .vs-photo { clip-path: inset(calc(var(--wipe) * var(--seam-y)) 0 0 0); }
+  .vs-side--warm .vs-photo { clip-path: inset(0 0 calc(var(--wipe) * (100% - var(--seam-y))) 0); }
+  .vs-side--cold .vs-hero-scrim { background: linear-gradient(to top, rgb(16 21 26 / 0.92) calc(100% - var(--seam-y)), rgb(16 21 26 / 0.7) calc(100% - var(--seam-y) + 5.5rem), rgb(16 21 26 / 0) calc(100% - var(--seam-y) + 11rem)); }
+  .vs-side--warm .vs-hero-scrim { background: linear-gradient(to bottom, rgb(22 16 11 / 0.92) var(--seam-y), rgb(22 16 11 / 0.74) calc(var(--seam-y) + 9rem), rgb(22 16 11 / 0.2) calc(var(--seam-y) + 16rem), rgb(22 16 11 / 0) 100%); }
+  .vs-h1 { font-size: clamp(2.2rem, 10.6vw, 3.1rem); }
+  .vs-h1__l { left: var(--sc-gutter); right: auto; text-align: left; bottom: calc(100svh - var(--seam-y) + 0.7rem); }
+  .vs-h1__r { left: var(--sc-gutter); bottom: auto; top: calc(var(--seam-y) + 0.6rem); }
+  .vs-sub { left: var(--sc-gutter); right: var(--sc-gutter); max-width: 19rem; text-align: left; font-size: 1rem; }
+  .vs-sub--l { top: auto; bottom: calc(100svh - var(--seam-y) + 0.7rem + clamp(2.2rem, 10.6vw, 3.1rem) + 0.9rem); }
+  .vs-sub--r { top: calc(var(--seam-y) + 0.6rem + clamp(2.2rem, 10.6vw, 3.1rem) + 0.9rem); }
+  .vs-hero-cta {
+    display: block; position: absolute; left: var(--sc-gutter);
+    top: calc(var(--seam-y) + 0.6rem + clamp(2.2rem, 10.6vw, 3.1rem) + 0.9rem + 3.4rem + 1rem);
+  }
+  .vs-hero-cta > a { animation: vs-fade 900ms var(--sc-ease-out) 700ms both; }
+  .vs-beat { left: var(--sc-gutter); right: var(--sc-gutter); max-width: none; text-align: left; font-size: 1.12rem; }
+  .vs-beat--l { top: auto; bottom: calc(100svh - var(--seam-y) + 1.4rem); }
+  .vs-beat--r { top: calc(var(--seam-y) + 1.4rem); }
+
+  /* flow: one column, claim then answer */
+  .vs-flow { grid-template-columns: minmax(0, 1fr); }
+  .vs-flow::after { display: none; }
+  .vs-cell--cold, .vs-cell--warm { padding-inline: var(--sc-gutter); text-align: left; }
+  .vs-ledger__photo.vs-cell { padding-inline: 0; }
+  .vs-ledger__head { padding-top: 2.75rem; padding-bottom: 0.4rem; }
+  .vs-cell--cold.vs-ledger__head .vs-h2, .vs-cell--cold.vs-row p { margin-left: 0; }
+  .vs-cell--warm.vs-ledger__head { display: none; }   /* the pairing says it; a second heading would split each pair */
+  .vs-row { padding-block: 1.05rem; }
+  .vs-row::before { display: none; }
+  .vs-cell--cold.vs-row { padding-top: 1.5rem; padding-bottom: 0.9rem; }
+  .vs-cell--warm.vs-row { padding-top: 0.9rem; padding-bottom: 1.5rem; border-top: 2px solid var(--vs-flame); }
+  .vs-row--last { padding-bottom: 1.5rem; }
+  .vs-cell--warm.vs-row--last { padding-bottom: 3.5rem; }
+  .vs-quiet { min-height: 0; }
+  .vs-quiet .vs-cell { min-height: 36svh; padding-block: 3rem; justify-content: flex-start; }
+  .vs-quiet .vs-cell--warm { border-top: 2px solid var(--vs-flame); }
+
+  /* gauge: the line lies down, and fills from the left */
+  .vs-gauge__ticks { left: 0; right: 0; width: auto; top: calc(var(--seam-y) - 7px); bottom: auto; height: 14px;
+    background: repeating-linear-gradient(to right, #8a949c 0 1px, transparent 1px 10%); }
+  .vs-gauge__fill { left: 0; right: 0; width: auto; top: calc(var(--seam-y) - 3px); bottom: auto; height: 6px;
+    transform-origin: 0 50%; transform: scaleX(var(--g)); }
+  .vs-gauge__limit { left: 50%; right: auto; top: calc(var(--seam-y) - 4.75rem); height: 9.5rem; border-top: 0; border-left: 1px dashed var(--vs-flame); }
+  .vs-gauge__limit span { left: 0.6rem; bottom: auto; top: 0; color: var(--vs-cold-soft); }
+  .vs-gauge-read {
+    right: auto; left: 0; top: auto; bottom: calc(100svh - var(--seam-y) + 0.9rem); width: 100%;
+    padding-right: 0.8rem; transform: translate3d(calc((var(--g) - 1) * 100%), 0, 0);
+  }
+  .vs-gauge-read__lead { max-width: 9.5rem; font-size: 0.86rem; line-height: 1.4; }
+  .vs-gauge-read__num { font-size: 2.5rem; }
+  .vs-gauge-note { max-width: 9.5rem; margin-left: auto; font-size: 0.86rem; }
+  .vs-gauge-intro, .vs-gauge-result { left: var(--sc-gutter); right: var(--sc-gutter); max-width: none; top: calc(var(--seam-y) + 1.6rem); }
+
+  /* peak: he comes DOWN to your side */
+  .vs-act--peak { --jan-w: 34vw; --jan-top: calc(var(--vs-top) + 9.75rem); --jan-dy: calc((100svh - var(--vs-top)) * 0.5 - 8.5rem); }
+  .vs-peak__head { max-width: none; font-size: 1.42rem; }
+  .vs-peak__head--l { right: var(--sc-gutter); top: calc(var(--vs-top) + 1.4rem); }
+  .vs-peak__head--r { left: calc(var(--sc-gutter) + var(--jan-w) + 1rem); right: var(--sc-gutter); top: calc(var(--vs-top) + (100svh - var(--vs-top)) * 0.5 + 1.25rem); }
+  .vs-jan { transform: translate3d(0, calc(var(--jan-t) * var(--jan-dy)), 0); }
+  .vs-seat--to { left: var(--sc-gutter); top: calc(var(--jan-top) + var(--jan-dy)); }
+  .vs-seat-label { left: calc(var(--sc-gutter) + var(--jan-w) + 1rem); right: var(--sc-gutter); top: var(--jan-top); max-width: none; font-size: 0.86rem; }
+  .vs-peak__body { left: var(--sc-gutter); right: var(--sc-gutter); max-width: none; font-size: 0.95rem;
+    top: calc(var(--jan-top) + var(--jan-dy) + var(--jan-w) * 859 / 760 + 1.1rem); }
+  .vs-peak__creds { left: var(--sc-gutter); right: var(--sc-gutter); width: auto; font-size: 0.84rem;
+    top: calc(var(--vs-top) + (100svh - var(--vs-top)) * 0.3 + 0.9rem); }
+  .vs-peak__creds li { padding-block: 0.42rem; }
+  .vs-act--peak .vs-side--cold > :not(.vs-jan), .vs-close__last {
+    translate: 0 calc((var(--split) - var(--ride-base)) * (100svh - var(--vs-top)));
+  }
+
+  /* process */
+  .vs-process .vs-cell { padding-block: 3rem; }
+  .vs-process__cold .vs-facts { position: static; }
+  .vs-process__warm { border-top: 2px solid var(--vs-flame); }
+  .vs-facts--warm dl { grid-template-columns: minmax(0, 1fr); }
+  .vs-facts--warm dl > div { border-bottom: 0; }
+  .vs-facts--warm dl > div:last-child { border-bottom: 1px solid var(--sc-hairline); }
+  .vs-process__block, .vs-process__block--flip { grid-template-columns: minmax(0, 1fr); margin-top: 3.5rem; }
+  .vs-process__photo img, .vs-process__block--flip .vs-process__photo img { aspect-ratio: 3 / 2; }
+  .vs-process__block--flip .vs-process__photo { order: 2; }
+  .vs-types { columns: 1; }
+
+  /* close: your column rises with the line, so it fits the shortest phone */
+  .vs-close__last { bottom: auto; top: calc(var(--vs-top) + 1.4rem); left: var(--sc-gutter); right: var(--sc-gutter); width: auto; font-size: 1.15rem; }
+  .vs-close__photo, .vs-close__copy { translate: 0 calc((var(--split) - 0.3) * (100svh - var(--vs-top))); }
+  .vs-close__photo { left: var(--sc-gutter); right: var(--sc-gutter); width: auto; top: calc(var(--vs-top) + (100svh - var(--vs-top)) * 0.3 + 1rem); }
+  .vs-close__photo img { aspect-ratio: auto; height: 17svh; }
+  .vs-close__copy { left: var(--sc-gutter); right: var(--sc-gutter); width: auto; top: calc(var(--vs-top) + (100svh - var(--vs-top)) * 0.3 + 17svh + 2rem); }
+  .vs-close__title { font-size: clamp(1.9rem, 8.6vw, 2.5rem); }
+  .vs-close__rest { margin-top: 0.9rem; }
+  .vs-close__rest .vs-lede { font-size: 1rem; }
+  .vs-close__actions { margin-top: 1.1rem; gap: 0.5rem 1.2rem; }
+  .vs-close__actions .vs-cta { width: 100%; }
+  .vs-close__actions .vs-link { display: inline-flex; align-items: center; min-height: 2.75rem; }
+  .vs-close__rest .vs-small { display: none; }
+  .vs-foot { bottom: 0.8rem; font-size: 0.78rem; padding-top: 0.7rem; }
+  .vs-foot nav { gap: 0 1rem; }
+  .vs-foot a { min-height: 2rem; }
+}
+
+/* ======================================================== REDUCED MOTION ====
+   Fewer and gentler, not zero. Every position change goes; the opacity that
+   carries the story stays. The line still ends up where the argument put it,
+   it just arrives there in steps (to-sider.js quantises --split). */
+@media (prefers-reduced-motion: reduce) {
+  .vs-h1__l > span, .vs-h1__r > span, .vs-sub > span, .vs-hero-cta > a { animation: none; }
+  .vs-cover :is(img, video, canvas), .vs-pil svg { animation: none; }
+  .vs-side .vs-cover, .vs-side .vs-cover--near { transform: scale(1.05); }
+  .vs-side--cold .vs-photo, .vs-side--warm .vs-photo { clip-path: none; opacity: calc(1 - var(--wipe)); }
+  .vs-gauge-read { transform: translate3d(0, -45.2svh, 0); }
+  .vs-gauge__fill { transform: scaleY(0.452); }
+  /* he does not travel: he fades out over there and in over here */
+  .vs-side--cold .vs-jan { transform: none; opacity: calc(1 - var(--jan-t)); }
+  .vs-side--warm .vs-jan { transform: translate3d(50%, 0, 0); opacity: var(--jan-t); }
+}
+@media (prefers-reduced-motion: reduce) and (max-width: 860px) {
+  .vs-gauge-read { transform: translate3d(-54.8%, 0, 0); }
+  .vs-gauge__fill { transform: scaleX(0.452); }
+  .vs-side--warm .vs-jan { transform: translate3d(0, var(--jan-dy), 0); }
+}
+
+/* =================================================================== V2 ====
+   The whole forside now lives on this page. The rule that keeps it from turning
+   into a document with a fancy hero: a question stands on THEIR side of the
+   line, its answer on YOURS. Spacing is tightened everywhere; the only held
+   silence left is the empty frame waiting for Jan. Loaded after to-sider.css.
+   ========================================================================== */
+
+/* hero, second beat: the forside intro */
+.vs-beat { font-size: inherit; line-height: 1.6; letter-spacing: 0; }
+.vs-beat > * + * { margin-top: 0.85rem; }
+.vs-beat--l { top: 30svh; max-width: 25rem; }
+.vs-beat--l p:not(.vs-h2) { color: var(--vs-cold-soft); font-size: 1.08rem; line-height: 1.58; }
+.vs-beat--r { top: calc(var(--vs-top) + clamp(1.5rem, 7svh, 4.5rem)); max-width: 35rem; }
+.vs-beat--r p:not(.vs-h2):not(.vs-lede) { color: var(--vs-warm-soft); }
+.vs-beat--r .vs-link { color: var(--vs-flame-deep); }
+
+/* ledger */
+.vs-ledger__head { padding-top: clamp(2.5rem, 5vw, 4rem); padding-bottom: 1.5rem; }
+.vs-ledger__head--2 { padding-top: clamp(2.5rem, 5vw, 4rem); }
+.vs-ledger__head .vs-h2 { max-width: 20ch; }
+.vs-ledger__lead { max-width: 24rem; margin: 1rem 0 0 auto; color: var(--vs-cold-soft); font-size: 1.08rem; }
+.vs-ledger__head .vs-lede { max-width: 34rem; color: var(--sc-ink-soft); }
+.vs-bullets { max-width: 36rem; }
+.vs-bullets li { padding-block: 0.7rem; border-top: 1px solid var(--sc-hairline); text-wrap: pretty; }
+.vs-bullets li:first-child { border-top: 0; padding-top: 0.2rem; }
+.vs-row--last { padding-bottom: clamp(3rem, 5vw, 4.5rem); }
+
+/* uenig med taksator */
+.vs-steps-act .vs-cell { padding-top: clamp(3rem, 6vw, 5rem); padding-bottom: clamp(3rem, 6vw, 5rem); }
+.vs-steps-act .vs-cell--cold .vs-h2 { max-width: 17ch; margin-left: auto; }
+.vs-steps-act .vs-cell--cold .vs-lede { max-width: 24rem; margin: 1.1rem 0 0 auto; color: var(--vs-cold-soft); }
+.vs-steps--long { margin-top: 0; max-width: 36rem; }
+.vs-steps--long li { font-family: var(--sc-font-text); font-weight: 400; font-size: 1rem; letter-spacing: 0; line-height: 1.55; padding-block: 0.8rem; }
+
+/* gauge */
+.vs-gauge-about {
+  position: absolute; right: calc(50% + 2.25rem); top: calc(var(--vs-top) + clamp(1.5rem, 6svh, 4rem));
+  width: min(27rem, 40%); text-align: right;
+}
+.vs-gauge-about .vs-h2 { font-size: clamp(1.35rem, 0.95rem + 1.3vw, 2.1rem); }
+.vs-gauge-about p { margin-top: 0.9rem; color: var(--vs-cold-soft); }
+.vs-gauge-intro { top: calc(var(--vs-top) + clamp(1.5rem, 6svh, 4rem)); max-width: 30rem; }
+.vs-gauge-intro .vs-lede { margin-top: 0; color: var(--sc-ink); }
+.vs-gauge-intro__more { margin-top: 0.8rem; color: var(--sc-ink-soft); }
+.vs-source + .vs-source { margin-top: 0.4rem; }
+@media (max-height: 780px) { .vs-gauge-intro__more { display: none; } }
+
+/* peak */
+.vs-act--peak { --jan-top: 40svh; }
+.vs-peak__body .vs-label { color: var(--sc-ink-soft); }
+.vs-peak__body { font-size: 0.98rem; }
+
+/* questions on their side, answers on yours */
+.vs-qa .vs-cell { padding-top: 2.4rem; padding-bottom: 2.4rem; border-top: 1px solid var(--sc-hairline); }
+.vs-qa .vs-cell:nth-child(-n+2) { border-top: 0; padding-top: clamp(3.5rem, 6vw, 5rem); }
+.vs-qa .vs-q--last, .vs-qa .vs-a--last { padding-bottom: clamp(3.5rem, 6vw, 5rem); }
+.vs-q { text-align: left; padding-right: 2rem; }
+.vs-q h2 {
+  position: sticky; top: calc(var(--vs-top) + 1.5rem);
+  font-family: var(--sc-font-display); font-weight: 700; font-size: clamp(1.08rem, 0.9rem + 0.7vw, 1.45rem);
+  line-height: 1.22; letter-spacing: -0.015em; text-wrap: balance;
+}
+.vs-a > * + *, .vs-a > div > * + * { margin-top: 1rem; }
+.vs-a p { max-width: 45rem; text-wrap: pretty; }
+.vs-a p:not(.vs-lede) { color: var(--sc-ink-soft); }
+.vs-a .vs-lede { color: var(--sc-ink); }
+.vs-a--media { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: clamp(2rem, 3.5vw, 3.5rem); align-items: start; }
+.vs-a--media > * + * { margin-top: 0; }
+.vs-a--flip { grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr); }
+.vs-a__photo img { width: 100%; height: auto; aspect-ratio: 4 / 5; object-fit: cover; border-radius: var(--sc-r-sm); }
+.vs-a--flip .vs-a__photo img { aspect-ratio: 1 / 1; object-position: 62% 50%; }
+.vs-a .vs-steps { margin-top: 1.25rem; max-width: 30rem; }
+.vs-a .vs-types { margin-top: 1rem; }
+.vs-types--3 { columns: 3; }
+.vs-a .vs-links { margin-top: 1.25rem; }
+
+.vs-table { overflow-x: auto; margin-top: 1.5rem; }
+.vs-table table { width: 100%; border-collapse: collapse; font-size: 0.92rem; line-height: 1.4; }
+.vs-table th, .vs-table td { text-align: left; vertical-align: top; padding: 0.75rem 1rem 0.75rem 0; border-top: 1px solid var(--sc-hairline); }
+.vs-table thead th { border-top: 0; font-weight: 600; font-size: 0.72rem; letter-spacing: 0.09em; text-transform: uppercase; color: var(--sc-ink-soft); }
+.vs-table tbody th { font-family: var(--sc-font-display); font-weight: 700; letter-spacing: -0.01em; min-width: 11rem; }
+.vs-table td { color: var(--sc-ink-soft); }
+.vs-table tbody tr:last-child > * { border-bottom: 1px solid var(--sc-hairline); }
+/* your row: the one accent region in the table */
+.vs-table__us > * { background: color-mix(in oklab, var(--vs-flame) 8%, transparent); color: var(--sc-ink); }
+.vs-table__us > :first-child { padding-left: 0.8rem; box-shadow: inset 2px 0 0 var(--vs-flame); }
+
+.vs-faq details { border-top: 1px solid var(--sc-hairline); margin-top: 0; max-width: 46rem; }
+.vs-faq details:last-child { border-bottom: 1px solid var(--sc-hairline); }
+.vs-faq summary {
+  display: flex; justify-content: space-between; align-items: center; gap: 1rem; min-height: 3rem; padding-block: 0.6rem;
+  font-family: var(--sc-font-display); font-weight: 700; font-size: 1.05rem; letter-spacing: -0.01em;
+  cursor: pointer; list-style: none;
+}
+.vs-faq summary::-webkit-details-marker { display: none; }
+.vs-faq summary::after { content: "+"; font-family: var(--sc-font-text); font-weight: 400; font-size: 1.4rem; line-height: 1; color: var(--sc-accent); transition: transform 160ms var(--sc-ease-out); }
+.vs-faq details[open] summary::after { transform: rotate(45deg); }
+.vs-faq details p { padding-bottom: 1.1rem; }
+
+.vs-values { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1.75rem 2.25rem; }
+.vs-values dt { font-family: var(--sc-font-display); font-weight: 700; font-size: 1.08rem; letter-spacing: -0.01em; text-transform: none; line-height: 1.25; padding-top: 0.8rem; border-top: 2px solid var(--vs-flame); }
+.vs-values dd { margin-top: 0.4rem; color: var(--sc-ink-soft); text-wrap: pretty; }
+.vs-sources { list-style: decimal; padding-left: 1.2rem; font-size: 0.9rem; color: var(--sc-ink-soft); }
+.vs-sources li + li { margin-top: 0.35rem; }
+.vs-sources a { color: var(--sc-accent); }
+
+/* close: the forside shortcuts fill the floor of the last stage */
+.vs-close__copy { top: calc(var(--vs-top) + 7svh); }
+.vs-close__rest .vs-small { display: none; }
+
+@media (max-width: 860px) {
+  .vs-close__copy { top: calc(var(--vs-top) + (100svh - var(--vs-top)) * 0.3 + 17svh + 2rem); }
+  .vs-beat { left: var(--sc-gutter); right: var(--sc-gutter); max-width: none; text-align: left; font-size: 0.93rem; line-height: 1.5; }
+  .vs-beat > * + * { margin-top: 0.6rem; }
+  .vs-beat .vs-h2 { font-size: 1.32rem; }
+  .vs-beat .vs-lede { font-size: 1rem; }
+  .vs-beat--l { top: auto; bottom: calc(100svh - var(--seam-y) + 1.2rem); }
+  .vs-beat--l p:not(.vs-h2) { font-size: 0.98rem; }
+  .vs-beat--r { top: calc(var(--seam-y) + 1.1rem); }
+  .vs-beat--r .vs-small { display: none; }        /* the same sentences return in the ledger and in Jan's act */
+
+  .vs-ledger__head, .vs-ledger__head--2 { padding-top: 2.5rem; padding-bottom: 1rem; }
+  .vs-cell--warm.vs-ledger__head { display: block; padding-top: 1.25rem; padding-bottom: 2rem; border-top: 2px solid var(--vs-flame); }
+  .vs-ledger__lead, .vs-steps-act .vs-cell--cold .vs-h2, .vs-steps-act .vs-cell--cold .vs-lede { margin-left: 0; }
+  .vs-steps-act .vs-cell { padding-block: 2.5rem; }
+  .vs-steps-act .vs-cell--warm { border-top: 2px solid var(--vs-flame); padding-top: 1.25rem; }
+
+  .vs-gauge-about { left: var(--sc-gutter); right: var(--sc-gutter); width: auto; text-align: left; top: calc(var(--vs-top) + 1.1rem); }
+  .vs-gauge-about .vs-h2 { font-size: 1.22rem; }
+  .vs-gauge-about p { font-size: 0.88rem; line-height: 1.45; margin-top: 0.5rem; }
+  .vs-gauge__limit { height: 5.5rem; }              /* stands on the gauge, never through the text under it */
+  .vs-gauge-intro { top: calc(var(--seam-y) + 1.4rem); }
+  .vs-gauge-intro .vs-lede { font-size: 0.98rem; }
+  .vs-gauge-intro__more { display: none; }         /* the FAQ and the restværdi link carry it */
+  .vs-gauge-result { top: calc(var(--seam-y) + 8.6rem); }
+  .vs-gauge-result .vs-h2 { font-size: 1.35rem; }
+  .vs-gauge-result .vs-lede { font-size: 0.95rem; margin-top: 0.5rem; }
+  .vs-source { margin-top: 0.5rem; font-size: 0.8rem; }
+
+  .vs-act--peak { --jan-w: 28vw; --jan-top: calc(var(--vs-top) + 9.75rem); }
+  .vs-peak__body { font-size: 0.86rem; line-height: 1.45; }
+  .vs-peak__body .vs-label { display: none; }
+  .vs-peak__body p + p { margin-top: 0.5rem; }
+
+  .vs-qa .vs-cell, .vs-qa .vs-cell:nth-child(-n+2) { padding-top: 2.2rem; padding-bottom: 1rem; border-top: 0; }
+  .vs-qa .vs-cell--warm, .vs-qa .vs-cell--warm:nth-child(-n+2) { padding-top: 1.25rem; padding-bottom: 2.4rem; border-top: 2px solid var(--vs-flame); }
+  .vs-q { padding-right: var(--sc-gutter); }
+  .vs-q h2 { position: static; font-size: 1.2rem; }
+  .vs-a--media, .vs-a--flip { grid-template-columns: minmax(0, 1fr); }
+  .vs-a--flip .vs-a__photo { order: 2; }
+  .vs-a__photo img, .vs-a--flip .vs-a__photo img { aspect-ratio: 3 / 2; }
+  .vs-types--3 { columns: 1; }
+  .vs-table table { min-width: 42rem; }
+  .vs-values { grid-template-columns: minmax(0, 1fr); gap: 1.25rem; }
+}
+
+/* ============================================================ I BYGGET ====
+   Prototypen havde klasser på hvert element. Her kommer teksten fra Markdown
+   (content/forside.md), så de samme udtryk hænges på elementerne i deres
+   sektion i stedet. Fælles dele fra style.css, som forsiden ikke indlæser,
+   står nederst.
+   ========================================================================== */
+.vs-flow--30 { --fs: 0.3; }
+
+/* sidens <h1>: den søgeordsbærende sætning, sat som etiket over den store linje */
+.vs-seo-h1 {
+  position: absolute; z-index: 25; left: calc(50% + var(--vs-gap)); bottom: calc(34svh + clamp(2.5rem, 1rem + 5.4vw, 5.75rem) + 1.1rem);
+  margin: 0; max-width: 24rem; color: rgb(255 255 255 / 0.92);
+  font-family: var(--sc-font-text); font-weight: 600; font-size: 0.78rem; line-height: 1.35;
+  letter-spacing: 0.09em; text-transform: uppercase;
+}
+
+
+/* hero, anden takt */
+.vs-beat .v2-h2, .vs-gauge-result .v2-h2 {
+  font-family: var(--sc-font-display); font-weight: 800; font-size: clamp(1.6rem, 1.05rem + 1.9vw, 2.75rem);
+  line-height: 1.05; letter-spacing: -0.027em; text-wrap: balance; color: var(--sc-ink);
+}
+.v2-lede { font-size: clamp(1.06rem, 0.98rem + 0.4vw, 1.3rem); line-height: 1.5; letter-spacing: -0.008em; color: var(--sc-ink); }
+.vs-beat--r .v2-lede { color: var(--vs-warm-ink); }
+.hero__screening { font-family: var(--sc-font-text); font-weight: 600; font-size: 0.78rem; letter-spacing: 0.09em; color: var(--vs-flame-deep); }
+.byline { font-size: 0.875rem; }
+.vs-beat--r a, .v2-laes a, .vs-gauge-result a, .vs-peak__body a, .vs-a a, .vs-steps-long a, .vs-bullets a {
+  color: var(--sc-accent); font-weight: 600; text-decoration-thickness: 1px; text-underline-offset: 0.24em;
+}
+
+/* regnskabet */
+.vs-ledger__photo picture, .vs-ledger__photo img { display: block; width: 100%; }
+.vs-ledger__head h2, .vs-steps-act h2, .vs-gauge-about h2 {
+  font-family: var(--sc-font-display); font-weight: 800; font-size: clamp(1.6rem, 1.05rem + 1.9vw, 2.75rem);
+  line-height: 1.05; letter-spacing: -0.027em; text-wrap: balance; max-width: 20ch;
+}
+.vs-cell--cold.vs-ledger__head h2, .vs-steps-act .vs-cell--cold h2 { margin-left: auto; }
+.vs-cell--cold.vs-ledger__head p, .vs-steps-act .vs-cell--cold p { max-width: 24rem; margin: 1rem 0 0 auto; color: var(--vs-cold-soft); font-size: 1.08rem; }
+.vs-ledger__head .vs-lede p { max-width: 34rem; color: var(--sc-ink-soft); }
+.vs-row h3.vs-row__claim { max-width: 34rem; margin: 0 0 0 auto; }
+.vs-row div p { max-width: 34rem; color: var(--sc-ink-soft); text-wrap: pretty; }
+
+/* måleren */
+.vs-gauge-about h2 { font-size: clamp(1.35rem, 0.95rem + 1.3vw, 2.1rem); max-width: none; }
+.vs-gauge-intro .v2-mere { margin-top: 0.8rem; color: var(--sc-ink-soft); }
+.vs-gauge-result p + p { margin-top: 0.8rem; }
+.vs-gauge-result p:not(.v2-h2) { color: var(--sc-ink-soft); }
+@media (max-height: 780px) { .vs-gauge-intro .v2-mere { display: none; } }
+
+/* uenig med taksator: de fem trin */
+.vs-steps-long ol { counter-reset: trin; max-width: 36rem; }
+.vs-steps-long li {
+  counter-increment: trin; display: grid; grid-template-columns: 2.25rem 1fr; align-items: baseline;
+  padding-block: 0.8rem; border-top: 1px solid var(--sc-hairline); line-height: 1.55;
+}
+.vs-steps-long li:last-child { border-bottom: 1px solid var(--sc-hairline); }
+.vs-steps-long li::before { content: counter(trin); font-weight: 600; font-size: 0.78rem; font-variant-numeric: tabular-nums; color: var(--sc-ink-soft); }
+.vs-steps-long p { margin-top: 1.5rem; }
+/* Trinnene kommer ét ad gangen, når blokken toner ind (motoren sætter 'sc-in' på
+   den; straks under reduceret bevægelse). Uden JavaScript: forside-noscript.css. */
+.vs-steps-long li { transition: opacity 520ms var(--sc-ease-out), transform 520ms var(--sc-ease-out); transition-delay: calc((var(--trin-nr, 1) - 1) * 90ms + 120ms); }
+.vs-steps-long:not(.sc-in) li { opacity: 0; transform: translate3d(0, 10px, 0); }
+.vs-steps-long li:nth-child(2) { --trin-nr: 2; }
+.vs-steps-long li:nth-child(3) { --trin-nr: 3; }
+.vs-steps-long li:nth-child(4) { --trin-nr: 4; }
+.vs-steps-long li:nth-child(5) { --trin-nr: 5; }
+@media (prefers-reduced-motion: reduce) { .vs-steps-long li { transition: none; } }
+
+/* Jan */
+.vs-peak__body .overlinje { font-weight: 600; font-size: 0.72rem; line-height: 1.3; letter-spacing: 0.09em; text-transform: uppercase; color: var(--sc-ink-soft); }
+
+/* spørgsmål og svar */
+.vs-q__h { position: sticky; top: calc(var(--vs-top) + 1.5rem); }
+.vs-q h2 { position: static; }
+.vs-a__indre > * + * { margin-top: 1rem; }
+.vs-a__indre > p:first-child { font-size: clamp(1.06rem, 0.98rem + 0.4vw, 1.3rem); line-height: 1.5; letter-spacing: -0.008em; color: var(--sc-ink); }
+.vs-a__indre p { max-width: 45rem; text-wrap: pretty; color: var(--sc-ink-soft); }
+.vs-a__indre ul { columns: 2; column-gap: 2rem; max-width: 45rem; }
+.vs-a__indre ul li { break-inside: avoid; padding-block: 0.5rem; border-top: 1px solid var(--sc-hairline); }
+.vs-a__indre ol { list-style: decimal; padding-left: 1.2rem; font-size: 0.9rem; color: var(--sc-ink-soft); }
+.vs-a__indre ol li + li { margin-top: 0.35rem; }
+/* et billede i svaret står i sin egen kolonne ved siden af teksten */
+.vs-a__indre:has(> figure.billede) { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); column-gap: clamp(2rem, 3.5vw, 3.5rem); align-content: start; }
+.vs-a__indre:has(> figure.billede) > * { grid-column: 1; }
+.vs-a__indre:has(> figure.billede) > figure.billede { grid-column: 2; grid-row: 1 / span 12; margin-top: 0; }
+.vs-a__indre figure.billede img { display: block; width: 100%; height: auto; aspect-ratio: 4 / 5; object-fit: cover; border-radius: var(--sc-r-sm); }
+
+.tabel-rul { overflow-x: auto; margin-top: 1.5rem; }
+.tabel-rul table { width: 100%; border-collapse: collapse; font-size: 0.92rem; line-height: 1.4; }
+.tabel-rul th, .tabel-rul td { text-align: left; vertical-align: top; padding: 0.75rem 1rem 0.75rem 0; border-top: 1px solid var(--sc-hairline); color: var(--sc-ink-soft); }
+.tabel-rul thead th { border-top: 0; font-weight: 600; font-size: 0.72rem; letter-spacing: 0.09em; text-transform: uppercase; }
+.tabel-rul tbody td:first-child { font-family: var(--sc-font-display); font-weight: 700; letter-spacing: -0.01em; min-width: 11rem; color: var(--sc-ink); }
+.tabel-rul tbody tr:last-child td { border-bottom: 1px solid var(--sc-hairline); }
+/* din række: tabellens ene accentområde */
+.tabel-rul tbody tr:nth-child(2) td { background: color-mix(in oklab, var(--vs-flame) 8%, transparent); color: var(--sc-ink); }
+.tabel-rul tbody tr:nth-child(2) td:first-child { padding-left: 0.8rem; box-shadow: inset 2px 0 0 var(--vs-flame); }
+/* Tabellen tager parti. forside.js læser kolonnen "Arbejder for" og sætter
+   'er-deres' (skifer) eller 'er-din' (papir med et strejf af flammen) på rækken;
+   farven kommer række for række, når tabellen er inde på skærmen ('er-inde').
+   Din egen række (nr. 2) beholder sin stærkere accent fra reglerne ovenfor. */
+.tabel-rul td { transition: background-color 520ms var(--sc-ease-out), color 520ms var(--sc-ease-out), box-shadow 520ms var(--sc-ease-out); transition-delay: calc(var(--nr, 0) * 90ms); }
+/* hele første kolonne rykker ind, så de farvede og den neutrale række flugter */
+.tabel-rul :is(th, td):first-child { padding-left: 0.8rem; }
+.tabel-rul tr.er-deres.er-inde td { background: var(--vs-slate); color: var(--vs-cold-soft); border-top-color: transparent; }
+.tabel-rul tr.er-deres.er-inde td:first-child { color: var(--vs-cold-ink); }
+/* :where holder reglen under række 2's egen, så den stærkere accent vinder dér */
+.tabel-rul :where(tr.er-din.er-inde) td { background: color-mix(in oklab, var(--vs-flame) 4%, transparent); color: var(--sc-ink); }
+.tabel-rul.tabel-venter tbody tr:nth-child(2):not(.er-inde) td { background-color: transparent; color: var(--sc-ink-soft); }
+.tabel-rul.tabel-venter tbody tr:nth-child(2):not(.er-inde) td:first-child { color: var(--sc-ink); box-shadow: inset 2px 0 0 transparent; }
+@media (prefers-reduced-motion: reduce) { .tabel-rul td { transition: none; } }
+
+.faq { max-width: 46rem; }
+.faq h3 { padding-top: 1rem; border-top: 1px solid var(--sc-hairline); font-family: var(--sc-font-display); font-weight: 700; font-size: 1.05rem; letter-spacing: -0.01em; line-height: 1.3; }
+.faq h3:first-child { border-top: 0; padding-top: 0; }
+.faq p { margin: 0.35rem 0 1rem; }
+
+.vaerdier, .tre-kol { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1.75rem 2.25rem; }
+.vaerdier h3, .tre-kol h4 { font-family: var(--sc-font-display); font-weight: 700; font-size: 1.08rem; letter-spacing: -0.01em; line-height: 1.25; padding-top: 0.8rem; border-top: 2px solid var(--vs-flame); }
+.vaerdier p, .tre-kol p { margin-top: 0.4rem; }
+.hvorfor { margin-top: 2.5rem; }
+/* Vulcanus-mærket over hvert punkt, som på den oprindelige side (assets/favicon.svg). */
+.hvorfor .tre-kol h4 { border-top: 0; padding-top: 3.1rem; background: url(/Vulcanus-draft/assets/favicon.svg) no-repeat center top / auto 2.4rem; }
+.hvorfor .tre-kol { text-align: center; }
+.hvorfor > .ramme > h3 { font-family: var(--sc-font-display); font-weight: 800; font-size: 1.35rem; letter-spacing: -0.02em; margin-bottom: 1.25rem; }
+
+/* afslutningen */
+.vs-close__copy h2 { font-family: var(--sc-font-display); font-weight: 800; font-size: clamp(2.3rem, 1rem + 4.3vw, 4.75rem); line-height: 0.98; letter-spacing: -0.035em; text-wrap: balance; }
+.vs-close__copy > p:not(.vs-close__actions) { margin-top: 1.5rem; max-width: 31rem; color: var(--sc-ink-soft); font-size: clamp(1.06rem, 0.98rem + 0.4vw, 1.3rem); line-height: 1.5; }
+.vs-close__photo img { display: block; }
+.vs-foot .linkknap { background: none; border: 0; padding: 0; cursor: pointer; font: inherit; color: inherit; text-decoration: underline; min-height: 1.75rem; }
+
+@media (max-width: 860px) {
+  .vs-seo-h1 { left: var(--sc-gutter); right: var(--sc-gutter); max-width: none; bottom: auto; top: calc(var(--vs-top) + 1rem); font-size: 0.68rem; }
+
+
+  .vs-beat .v2-h2 { font-size: 1.32rem; }
+  .vs-beat .v2-lede { font-size: 1rem; }
+  /* Et halvt telefonskærmbillede: intro, forfatter og link skal med. Linjen om
+     gratis screening står allerede som knap i heroen, og sætningen om
+     eksaminerede skadekonsulenter vender tilbage i regnskabet lige under. */
+  .vs-beat--r > .hero__screening, .vs-beat--r > p:nth-of-type(4) { display: none; }
+  .vs-beat--r > p:nth-of-type(5) { font-size: 0.9rem; line-height: 1.45; }
+  .vs-beat--r .byline { font-size: 0.8rem; }
+  .vs-cell--cold.vs-ledger__head h2, .vs-steps-act .vs-cell--cold h2, .vs-cell--cold.vs-ledger__head p, .vs-steps-act .vs-cell--cold p, .vs-row h3.vs-row__claim { margin-left: 0; }
+  .vs-gauge-about h2 { font-size: 1.22rem; }
+  .vs-gauge-intro .v2-lede { font-size: 0.98rem; }
+  .vs-gauge-intro .v2-mere { display: none; }
+  .vs-gauge-result .v2-h2 { font-size: 1.35rem; }
+  .vs-gauge-result p:not(.v2-h2) { font-size: 0.88rem; margin-top: 0.5rem; }
+  .vs-q__h { position: static; }
+  .vs-a__indre ul { columns: 1; }
+  .vs-a__indre:has(> figure.billede) { display: block; }
+  .vs-a__indre figure.billede { margin-top: 1.25rem; }
+  .vs-a__indre figure.billede img { aspect-ratio: 3 / 2; }
+  .tabel-rul table { min-width: 42rem; }
+  .vaerdier, .tre-kol { grid-template-columns: minmax(0, 1fr); gap: 1.25rem; }
+  .vs-close__copy h2 { font-size: clamp(1.9rem, 8.6vw, 2.5rem); }
+  .vs-close__copy > p:not(.vs-close__actions) { margin-top: 0.9rem; font-size: 1rem; }
+}
+
+/* ===================================== BILLEDER BAG DE FASTHOLDTE AKTER ====
+   The gauge and the peak used to hold a whole screen of flat plate around a few
+   lines of copy, and on a tall window most of the screen was nothing. Both now
+   carry a picture (.vs-bag, above), and the gauge's copy is gathered around the
+   one thing the act is about: the 50 % line.
+   ========================================================================== */
+/* gauge: what it is sits ON the limit line, the ruling sits UNDER it. The warm
+   copy stands directly on the picture, like the cold side and the peak (Rado,
+   2026-09-19: the paper cards are gone). A paper veil lies under the text column
+   only, measured in rem from the line so it fits the column in any window, and
+   is gone before the far edge, so the house still stands clear on the right. */
+.vs-act--gauge .vs-side--cold .vs-bag::after { background: linear-gradient(to right, rgb(30 37 43 / 0.34) 0%, rgb(30 37 43 / 0.6) 24%, rgb(30 37 43 / 0.84) 50%); }
+.vs-act--gauge .vs-side--warm .vs-bag::after { background: linear-gradient(to right, rgb(246 243 237 / 0.9) 50%, rgb(246 243 237 / 0.86) calc(50% + 30rem), rgb(246 243 237 / 0.3) calc(50% + 42rem), rgb(246 243 237 / 0) calc(50% + 52rem)); }
+.vs-gauge-intro, .vs-gauge-result { text-shadow: 0 0 14px rgb(246 243 237 / 0.85); }
+.vs-gauge-read__num, .vs-gauge-about h2 { text-shadow: 0 1px 14px rgb(14 18 22 / 0.55); }
+.vs-gauge-about p, .vs-gauge-read__lead, .vs-gauge-note { color: var(--vs-cold-ink); text-shadow: 0 1px 10px rgb(14 18 22 / 0.6); }
+@media (min-width: 861px) {
+  .vs-gauge-about { top: auto; bottom: calc(50svh + 2.4rem); }
+  /* the text stands where it stood inside the cards (their padding is in the offsets) */
+  .vs-gauge-intro { top: auto; bottom: calc(50svh + 3.65rem); }
+  .vs-gauge-result { top: calc(50svh + 2.55rem); }
+  /* the limit's label stands at the far end of its line, directly on the picture
+     like the rest of the warm copy: no card, a paper halo keeps it readable */
+  .vs-gauge__limit span { left: auto; right: var(--sc-gutter); bottom: 0.45rem; color: var(--vs-warm-ink); text-shadow: 0 0 6px rgb(246 243 237 / 0.95), 0 0 14px rgb(246 243 237 / 0.85); }
+}
+
+/* peak: the portrait is the subject, so the pictures stay quiet behind it */
+.vs-act--peak .vs-side--cold .vs-bag::after { background: linear-gradient(to right, rgb(30 37 43 / 0.62) 0%, rgb(30 37 43 / 0.74) 50%); }
+.vs-act--peak .vs-side--warm .vs-bag::after { background: linear-gradient(to right, rgb(246 243 237 / 0.84) 50%, rgb(246 243 237 / 0.74) 100%); }
+.vs-act--peak .vs-peak__body, .vs-act--peak .vs-peak__body .overlinje, .vs-act--peak .vs-peak__creds { color: var(--vs-warm-ink); }
+.vs-act--peak .vs-seat-label { color: var(--vs-cold-ink); }
+
+@media (max-width: 860px) {
+  /* the line lies across the phone, so the veils run down it, not along it */
+  .vs-side--cold .vs-bag::after, .vs-act--gauge .vs-side--cold .vs-bag::after, .vs-act--peak .vs-side--cold .vs-bag::after {
+    background: linear-gradient(to bottom, rgb(30 37 43 / 0.5) 0%, rgb(30 37 43 / 0.82) calc(var(--seam-y) - 9rem), rgb(30 37 43 / 0.86) var(--seam-y));
+  }
+  .vs-side--warm .vs-bag::after, .vs-act--gauge .vs-side--warm .vs-bag::after, .vs-act--peak .vs-side--warm .vs-bag::after {
+    background: linear-gradient(to bottom, rgb(246 243 237 / 0.88) var(--seam-y), rgb(246 243 237 / 0.82) calc(var(--seam-y) + 16rem), rgb(246 243 237 / 0.5) 100%);
+  }
+  .vs-gauge-intro, .vs-gauge-result { left: var(--sc-gutter); padding: 0; background: none; box-shadow: none; }
+}
+@media (prefers-reduced-motion: reduce) { .vs-bag--still img { transform: none; } }
+
+/* The question stays beside its answer. A short question next to a long answer
+   used to leave a column of bare slate once it had scrolled off; now it holds
+   under the plate until its own row ends. Desktop only: on a phone the question
+   sits above its answer and there is no column to empty. */
+@media (min-width: 861px) {
+  .vs-qa .vs-q__h, .vs-steps-act .vs-cell--cold > div, .vs-ledger .vs-row__claim, .vs-ledger__head--2 > div {
+    position: sticky; top: calc(var(--vs-top) + 2.25rem);
+  }
+}
+/* peak, a little more of the table */
+.vs-act--peak .vs-side--warm .vs-bag::after { background: linear-gradient(to right, rgb(246 243 237 / 0.8) 50%, rgb(246 243 237 / 0.66) 100%); }
+
+/* close: the act used to come onto the screen EMPTY. Its copy waited (cue 0.34)
+   for the line to leave, because it stood where the cold plate still was, so a
+   whole screen of scroll showed one photograph on bare paper. Now the side
+   carries a picture (the house from the gauge, rebuilt), and the copy is there
+   from the start: it stands clear of the line and rides out to the edge with it. cqw for the same reason as the peak: the stage is the ruler. */
+.vs-act--close .vs-side--cold .vs-bag::after { background: rgb(30 37 43 / 0.78); }
+/* Papiret til venstre toner hurtigt ud, så huset står skarpt og uden slør (2026-09-19). */
+.vs-act--close .vs-side--warm .vs-bag::after { background: linear-gradient(to right, rgb(246 243 237 / 1) 0%, rgb(246 243 237 / 0.97) 17%, rgb(246 243 237 / 0.6) 27%, rgb(246 243 237 / 0.12) 36%, rgb(246 243 237 / 0) 43%); }
+.vs-close__last { text-shadow: 0 1px 10px rgb(14 18 22 / 0.6); }
+.vs-act--close .vs-foot {
+  left: 0; right: 0; bottom: 0; padding: 0.85rem var(--sc-gutter) 1rem;
+  background: rgb(246 243 237 / 0.94); border-top: 1px solid var(--sc-hairline);
+}
+@media (min-width: 861px) {
+  /* The WHOLE photograph, never cropped and never zoomed (Rado, 2026-09-19): it keeps its
+     own 3:2 shape, stands against the right edge and above the footer band, and is as wide as
+     the window allows without losing anything at the top. Where the window is taller than
+     the picture, its sky fades into the paper; what is left over on the left is paper too. */
+  .vs-bag--hus img {
+    inset: auto 0 3.2rem auto;
+    width: min(100%, calc((100svh - var(--vs-top) - 3.2rem) * 1.5)); height: auto; aspect-ratio: 3 / 2;
+    object-fit: contain; transform: none;
+    -webkit-mask-image: linear-gradient(to bottom, transparent 0%, #000 5%);
+    mask-image: linear-gradient(to bottom, transparent 0%, #000 5%);
+  }
+  /* Vind i haven. Klippet ligger i fotoets egen boks (samme 3:2, samme kant), men ses kun
+     gennem masken: grenen, busken forrest og himlen. Alt andet, huset først og fremmest, er
+     stadig fotoet i fuld opløsning (genereret video tegner mursten om for hvert billede, og
+     klippet er kun 1620 px bredt). Den toner ind, når den spiller (forside.js: 'vs-har-vind'). */
+  .vs-bag--hus video.vs-vind {
+    inset: auto 0 3.2rem auto;
+    width: min(100%, calc((100svh - var(--vs-top) - 3.2rem) * 1.5)); height: auto; aspect-ratio: 3 / 2;
+    object-fit: contain; opacity: 0; transition: opacity 900ms var(--sc-ease-out);
+    -webkit-mask-image: url(/Vulcanus-draft/assets/video/forside/hus-vind-maske.png), linear-gradient(to bottom, transparent 0%, #000 5%);
+    mask-image: url(/Vulcanus-draft/assets/video/forside/hus-vind-maske.png), linear-gradient(to bottom, transparent 0%, #000 5%);
+    -webkit-mask-size: 100% 100%; mask-size: 100% 100%;
+    -webkit-mask-repeat: no-repeat; mask-repeat: no-repeat;
+    -webkit-mask-composite: source-in; mask-composite: intersect;
+  }
+  .vs-har-vind .vs-bag--hus video.vs-vind { opacity: 1; }
+}
+/* På telefonen er billedet beskåret bag teksten, og klippet hentes aldrig. */
+@media (max-width: 860px) { .vs-vind { display: none; } }
+@media (min-width: 861px) {
+  .vs-close__copy { translate: calc(var(--split) * 100cqw) 0; width: min(44%, 35.5rem); }
+  /* No card (Rado, 2026-09-19): a card as wide as the copy always lay half over the
+     photograph's fade. The copy stands on the paper itself: the veil is solid to the end
+     of the text column, measured in rem from the gutter like the column, and fades after
+     it. It rides with the line like the copy does, so the text is on paper the whole way
+     out and the house is unveiled as the line leaves. */
+  .vs-act--close .vs-side--warm .vs-bag::after {
+    background: linear-gradient(to right,
+      rgb(246 243 237 / 1) calc(var(--split, 0) * 100cqw + var(--sc-gutter) + 35.5rem),
+      rgb(246 243 237 / 0.6) calc(var(--split, 0) * 100cqw + var(--sc-gutter) + 41rem),
+      rgb(246 243 237 / 0) calc(var(--split, 0) * 100cqw + var(--sc-gutter) + 49rem));
+  }
+}
+@media (max-width: 860px) {
+  /* no photograph strip above the copy any more: the picture is behind it */
+  .vs-close__copy { top: calc(var(--vs-top) + (100svh - var(--vs-top)) * 0.3 + 1.5rem); }
+  .vs-act--close .vs-foot { bottom: 0; padding: 0.6rem var(--sc-gutter) 0.7rem; }
+}
+@media (max-width: 860px) {
+  /* close on a phone: the copy stands on paper here too, over a lightly veiled house */
+  .vs-act--close .vs-side--warm .vs-bag::after { background: rgb(246 243 237 / 0.3); }
+  .vs-close__copy {
+    left: calc(var(--sc-gutter) - 0.8rem); right: calc(var(--sc-gutter) - 0.8rem); padding: 1rem 0.8rem 1.1rem;
+    background: rgb(246 243 237 / 0.95); border-radius: var(--sc-r-sm); box-shadow: var(--vs-shadow);
+  }
+}
+
+/* The photographs inside the answers open from the line outwards as they come
+   up the screen, and settle from a slightly closer crop (forside.js measures
+   each one and writes --rv, 0 to 1). Unset, they simply stand open. */
+.vs-a__indre figure.billede {
+  overflow: clip; border-radius: var(--sc-r-sm);
+  clip-path: inset(0 calc((1 - var(--rv, 1)) * 100%) 0 0 round var(--sc-r-sm));
+}
+.vs-a__indre figure.billede img { transform: scale(calc(1.14 - 0.14 * var(--rv, 1))); transform-origin: 50% 50%; will-change: transform; }
+
+/* peak, sized to the window. The portrait and its copy were capped for a laptop
+   (17rem, 0.98rem), so on a large window the same small group stood in a very
+   large stage with the headline stranded at the top of it. Now the group grows
+   with the window, the headline sits ON the group instead of at the top of the
+   stage, and the whole of it is centred on the stage's height. */
+@media (min-width: 861px) {
+  .vs-act--peak {
+    /* the lesser of width and height: a wide, LOW window must not get a tall group */
+    --jan-w: clamp(10rem, min(17.5vw, 32svh), 25rem);
+    --jan-h: calc(var(--jan-w) * 859 / 760);
+    --jan-top: calc(54svh - var(--jan-h) / 2);
+  }
+  .vs-peak__head { top: auto; bottom: calc(100% - var(--jan-top) + clamp(1.6rem, 3svh, 2.6rem)); font-size: clamp(1.7rem, 0.9rem + 1.9vw, 3.4rem); max-width: min(44rem, calc(50% - var(--sc-gutter) * 2)); }
+  .vs-peak__body { max-width: 31rem; font-size: clamp(0.9rem, min(0.62rem + 0.5vw, 0.3rem + 1.55svh), 1.22rem); }
+  .vs-peak__body .overlinje { font-size: clamp(0.72rem, 0.5rem + 0.3vw, 0.86rem); }
+  .vs-peak__creds, .vs-seat-label { font-size: clamp(0.95rem, 0.62rem + 0.46vw, 1.15rem); }
+  .vs-seat-label { max-width: 24rem; }
+}
+
+
+.vs-close__copy .vs-opringning > p { margin-top: 0.35rem; max-width: none; font-size: 0.98rem; line-height: 1.45; color: var(--sc-ink-soft); }
+
+
+.vs-close__copy .vs-opringning .formular-info { grid-column: 1 / -1; margin: 0; max-width: none; font-size: 0.8rem; line-height: 1.4; color: var(--vs-warm-soft); }
+
+/* The form is the act's one action and stands right under the lede; the other
+   ways in (phone, mail, the contact page) are one quiet line under it, so the
+   hairline moves from above the form to above that line. */
+.vs-close__copy .vs-opringning { margin-top: 1.9rem; padding-top: 0; border-top: 0; }
+.vs-close__copy .vs-close__actions { gap: 0.5rem 1.4rem; margin-top: 1.6rem; padding-top: 1.3rem; border-top: 1px solid var(--sc-hairline); font-size: 0.98rem; }
+.vs-close__eller { color: var(--sc-ink-soft); }
+
+
+/* a low window: the form matters more than its one-line introduction */
+@media (max-height: 800px) { .vs-close__copy .vs-opringning > p { display: none; }  }
+@media (max-width: 860px) {
+
+  .vs-close__copy .vs-opringning > p { display: none; }
+
+
+}
+/* A wide but LOW window: the closing copy carries a form, so its headline
+   follows the window's height or the privacy note ends up under the footer. */
+@media (min-width: 861px) and (max-height: 780px) {
+  .vs-close__copy { top: calc(var(--vs-top) + 3svh); }
+  .vs-close__copy h2 { font-size: clamp(2rem, 7svh, 3.4rem); }
+  .vs-close__copy > p:not(.vs-close__actions) { margin-top: 0.9rem; font-size: 1.05rem; }
+  .vs-close__copy .vs-opringning { margin-top: 1.2rem; }
+  .vs-close__copy .vs-close__actions { margin-top: 1rem; padding-top: 0.9rem; }
+}

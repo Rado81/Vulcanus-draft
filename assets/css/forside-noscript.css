@@ -1,0 +1,10 @@
+/* Without JavaScript nothing is driven, so show every state settled. The custom
+   property defaults in to-sider.css are already the settled values (gauge full,
+   Jan on your side, photographs unfolded); this only lifts what the engine would
+   have faded in, and drops the one block that shares a stage with another. */
+[data-sc-cue], [data-sc-in], [data-sc-stagger] > * { opacity: 1 !important; transform: none !important; }
+[data-sc-reveal] { clip-path: none !important; }
+.vs-steps-long li { opacity: 1 !important; transform: none !important; }   /* trinnene venter på 'sc-in' */
+.vs-hero-b { display: none; }            /* it sits where the photographs still are */
+.vs-gauge-intro { display: none; }       /* the result occupies the settled gauge */
+.vs-peak__head--l { display: none; }     /* he has already crossed */

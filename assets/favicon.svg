@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-4 -10 158 166" role="img" aria-label="Vulcanus">
+<!-- Vektoriseret fra backups/media-originals/9403-favicon.png (Task 8). Formen er
+     håndoptegnet ud fra pixel-scanning af originalen (rundet søjle/skjold i mørk
+     antracit med en orange trekant), farverne er hentet med en pipette fra de
+     samme flade pixler: #2e2e2d (badge) og #ff6600 (trekant). -->
+<path d="M58,8 Q75,-6 92,8 L136,147 L13,147 Z" fill="#2e2e2d"/>
+<path d="M75,30 L105,124 L45,124 Z" fill="#ff6600"/>
+</svg>

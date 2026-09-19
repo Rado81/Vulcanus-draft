@@ -1,0 +1,506 @@
+/* vulcanus.dk — ny statisk udgave, der efterligner den nuværende sides udtryk.
+ *
+ * Farver og skrifter er målt på den levende side (https://vulcanus.dk/) med
+ * getComputedStyle, 2026-09-16:
+ *   accent (topbar, knapper, aktivt menupunkt)  #fd2d04
+ *   brødtekst                                   #5c5a57  (Red Hat Text 400, 16px)
+ *   overskrifter                                Red Hat Display 800
+ *   mørk boks / sidefod                         #2d2d2d
+ *   lys sektion                                 #f7f7f7
+ * Skrifterne ligger lokalt i /assets/fonts/ (fonts.css) — ingen @import, ingen
+ * tredjepart. Eneste tredjepart er Google Maps på kontaktsiden, som først
+ * indlæses efter samtykke i cookiebanneret (samtykke.js).
+ */
+:root {
+  --accent:     #fd2d04;
+  --accent-mørk:#d92500;
+  --overskrift: #2b2a28;
+  --tekst:      #5c5a57;
+  --mørk:       #2d2d2d;
+  --flade:      #f7f7f7;
+  --kant:       #e4e2df;
+  --hvid:       #ffffff;
+  --maks:       74rem;
+  --luft:       clamp(1rem, 4vw, 2.5rem);
+  --font-tekst:   "Red Hat Text", "Segoe UI", Arial, sans-serif;
+  --font-titel:   "Red Hat Display", "Segoe UI", Arial, sans-serif;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0;
+  font: 400 1rem/1.65 var(--font-tekst);
+  color: var(--tekst);
+  background: var(--hvid);
+}
+img, picture, svg { max-width: 100%; height: auto; display: block; }
+a { color: var(--accent); }
+a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visible {
+  outline: 3px solid var(--overskrift);
+  outline-offset: 2px;
+}
+h1, h2, h3, h4 {
+  font-family: var(--font-titel);
+  color: var(--overskrift);
+  line-height: 1.2;
+  margin: 0 0 .75rem;
+}
+h2 { font-size: clamp(1.5rem, 2.6vw, 2rem); font-weight: 700; }
+h3 { font-size: clamp(1.35rem, 2.2vw, 1.75rem); font-weight: 700; }
+h4 { font-size: 1.15rem; font-weight: 700; margin-top: 1.5rem; }
+p { margin: 0 0 1rem; }
+
+.skjult {
+  position: absolute; width: 1px; height: 1px; overflow: hidden;
+  clip: rect(0 0 0 0); white-space: nowrap;
+}
+.springlink {
+  position: absolute; left: -9999px;
+  background: var(--mørk); color: #fff; padding: .75rem 1rem; z-index: 100;
+}
+.springlink:focus { left: 0; top: 0; }
+
+.ramme { max-width: var(--maks); margin: 0 auto; padding-inline: var(--luft); }
+
+/* --- Topbar og sidehoved ------------------------------------------------ */
+.topbar { background: var(--accent); color: #fff; }
+.topbar__indre {
+  display: flex; flex-wrap: wrap; justify-content: flex-end; gap: .4rem 1.5rem;
+  padding: .5rem var(--luft);
+  font-size: .75rem; font-weight: 700;
+}
+.topbar a, .topbar span { color: #fff; text-decoration: none; display: inline-flex; align-items: center; gap: .35rem; }
+.topbar .ikon { width: .85rem; height: .85rem; fill: currentColor; }
+
+.sidehoved {
+  display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between;
+  gap: .75rem 2rem;
+  padding: 1rem var(--luft);
+  background: var(--hvid);
+}
+.sidehoved .logo img { width: 200px; height: auto; }
+.sidehoved nav ul {
+  display: flex; flex-wrap: wrap; gap: .25rem 1.25rem;
+  margin: 0; padding: 0; list-style: none;
+}
+.sidehoved nav a {
+  font-family: var(--font-titel); font-weight: 700; font-size: 1.05rem;
+  color: var(--overskrift); text-decoration: none;
+}
+.sidehoved nav a:hover, .sidehoved nav a[aria-current="page"] { color: var(--accent); }
+
+/* --- Hero --------------------------------------------------------------- */
+.hero {
+  position: relative; isolation: isolate;
+  display: grid; place-items: center;
+  color: #fff; text-align: center;
+  background: var(--mørk);
+  overflow: hidden;
+}
+.hero__billede, .hero__billede picture, .hero__billede img {
+  position: absolute; inset: 0; width: 100%; height: 100%;
+}
+.hero__billede { z-index: -2; }
+.hero__billede img { object-fit: cover; }
+.hero::after {
+  content: ""; position: absolute; inset: 0; z-index: -1;
+  background: rgb(20 20 20 / .55);
+}
+.hero__indhold { max-width: 58rem; padding: 4rem var(--luft); }
+.hero h1 {
+  color: #fff; font-weight: 800;
+  text-shadow: 0 2px 12px rgb(0 0 0 / .35);
+}
+.hero--forside h1 { font-size: clamp(2.1rem, 4.6vw, 3.4rem); line-height: 1.08; margin-bottom: 1.25rem; }
+.hero__over p {
+  margin: 0 0 .6rem;
+  font-size: clamp(.9rem, 1.4vw, 1.15rem); letter-spacing: .3em;
+}
+.hero__under h2 {
+  color: var(--accent); font-size: clamp(1.25rem, 2.4vw, 1.8rem); font-weight: 700;
+  margin: 0 0 1rem;
+}
+.hero__under p { font-size: clamp(1rem, 1.5vw, 1.2rem); margin: 0 0 .6rem; color: #fff; }
+/* "Gratis screening"-linjen: et afsnit, ikke en overskrift (den var en H2
+ * uden indhold under sig) — men med samme udtryk som .hero__under h2. */
+.hero__under .hero__screening {
+  font-family: var(--font-titel); line-height: 1.2;
+  color: var(--accent); font-size: clamp(1.25rem, 2.4vw, 1.8rem); font-weight: 700;
+  margin: 0 0 1rem;
+}
+.hero--forside .knap { margin-top: 1.5rem; }
+.hero--side { min-height: 25rem; }
+.hero--side h1 { font-size: clamp(1.9rem, 3.4vw, 2.6rem); max-width: 50rem; margin-inline: auto; }
+.hero__kontakt {
+  display: flex; justify-content: center; flex-wrap: wrap; gap: .5rem 0;
+  margin: 1.25rem 0 0; font-size: .8rem; font-weight: 700;
+}
+.hero__kontakt a { color: rgb(255 255 255 / .85); text-decoration: none; padding: 0 .75rem; }
+.hero__kontakt a + a { border-left: 1px solid rgb(255 255 255 / .5); }
+
+.sidetitel { background: var(--mørk); padding: 3.5rem 0; }
+.sidetitel h1 { color: #fff; font-size: clamp(1.9rem, 3.4vw, 2.6rem); margin: 0; }
+
+/* --- Knapper ------------------------------------------------------------ */
+.knap, button[type="submit"] {
+  display: inline-block;
+  font: 700 .95rem var(--font-titel);
+  padding: 1rem 2.25rem; border: 0; border-radius: 0;
+  background: var(--accent); color: #fff; text-decoration: none; cursor: pointer;
+}
+.knap:hover, button[type="submit"]:hover { background: var(--accent-mørk); }
+
+/* --- Sektioner og kolonner ---------------------------------------------- */
+.blok { position: relative; isolation: isolate; padding-block: clamp(3rem, 7vw, 5.5rem); }
+.blok--flade { background: var(--flade); }
+/* Mørkt bånd med fast baggrundsbillede: billedet står stille, mens siden
+ * ruller hen over det (som background-attachment: fixed på den nuværende
+ * side). Billedet ligger position: fixed og klippes til båndet af
+ * clip-path — det virker også på iPhone, hvor background-attachment: fixed
+ * ikke gør. Mørkt lag: rgb(47 47 46) ved 80 %, målt på den nuværende side. */
+.blok--moerk { color: #fff; background: #2f2f2e; clip-path: inset(0); }
+.blok--moerk h2, .blok--moerk h3, .blok--moerk h4 { color: #fff; }
+.blok--moerk .baggrund { position: fixed; inset: 0; z-index: -2; }
+.blok--moerk .baggrund picture, .blok--moerk .baggrund img {
+  position: absolute; inset: 0; width: 100%; height: 100%;
+}
+.blok--moerk .baggrund img { object-fit: cover; object-position: 50% 50%; }
+.blok--moerk::after {
+  content: ""; position: absolute; inset: 0; z-index: -1;
+  background: rgb(47 47 46 / .8);
+}
+.blok--moerk h2 + p { font-family: var(--font-titel); font-weight: 700; color: #fff; }
+
+.to-kol { display: grid; gap: 2.5rem; align-items: start; }
+.ramme.to-kol { align-items: center; }
+.to-kol--boks { align-items: start; }
+.to-kol .kol > :last-child { margin-bottom: 0; }
+.tre-kol { display: grid; gap: 2rem; }
+
+.overlinje {
+  font-family: var(--font-titel); font-weight: 800; letter-spacing: .04em;
+  text-transform: uppercase; color: #9a9894; margin-bottom: .4rem;
+}
+.byline { font-size: .9rem; font-style: italic; }
+.billede { margin: 0; }
+.billede img { width: 100%; }
+
+/* Portræt på profilsiden ("Mød Jan Christensen") */
+.portraet { margin: 0; max-width: 24rem; }
+.portraet img { width: 100%; aspect-ratio: 4 / 5; object-fit: cover; }
+.to-kol--portraet h4 { margin-top: 0; }
+
+.streg-top { border-top: 2px solid var(--accent); padding-top: 1.5rem; margin-bottom: 1rem; }
+.streg-bund { border-bottom: 2px solid var(--accent); margin-bottom: 2rem; }
+.streg-bund h2 { margin-bottom: 1.5rem; }
+
+.vaerdier { display: grid; gap: 0 3rem; margin-top: 1.5rem; }
+.vaerdier h4 { margin-top: 1rem; }
+/* Underoverskrifter på forsiden er H3 (ingen H4 direkte under en H2), men
+ * beholder H4'ernes størrelse. */
+.vaerdier h3, .ydelser h3, .faq h3 { font-size: 1.15rem; margin-top: 1.5rem; }
+.vaerdier h3 { margin-top: 1rem; }
+.ydelser .kol > h3:first-child { margin-top: 0; }
+
+ul { padding-left: 1.2rem; }
+li { margin-bottom: .15rem; }
+li ul { margin-top: .15rem; list-style: circle; }
+
+/* Billedkort på forsiden */
+.kort-raekke { display: grid; gap: 1.5rem; }
+.kort {
+  position: relative; display: block; aspect-ratio: 5 / 4; overflow: hidden;
+  color: #fff; text-decoration: none;
+}
+.kort picture, .kort img { position: absolute; inset: 0; width: 100%; height: 100%; }
+.kort img { object-fit: cover; transition: transform 1s ease; will-change: transform; }
+/* Samme som den nuværende side: zoom til 120 % over 1 sekund. */
+.kort:hover img, .kort:focus-visible img { transform: scale(1.2); }
+.kort::after { content: ""; position: absolute; inset: 0; background: rgb(0 0 0 / .3); }
+.kort__tekst {
+  position: absolute; inset: 0; z-index: 1;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+}
+.kort__titel { font: 800 1.6rem var(--font-titel); }
+.kort__mere { font-size: .9rem; }
+
+/* Billedstribe på undersider */
+.karrusel { --synlige: 1; --mellemrum: 10px; position: relative; margin-top: 2.5rem; }
+/* Uden JavaScript: en vandret rulleliste. */
+.karrusel__vindue { overflow-x: auto; scroll-snap-type: x mandatory; }
+.karrusel__spor { display: flex; gap: var(--mellemrum); transition: transform .5s ease; }
+.karrusel__spor--straks { transition: none; }
+.karrusel__slide {
+  flex: 0 0 calc((100% - (var(--synlige) - 1) * var(--mellemrum)) / var(--synlige));
+  scroll-snap-align: start;
+}
+.karrusel__slide img { width: 100%; aspect-ratio: 4 / 3; object-fit: cover; }
+/* Med JavaScript (karrusel.js): glidende karrusel med pile og prikker. */
+.karrusel--aktiv .karrusel__vindue { overflow: hidden; }
+.karrusel__pil {
+  position: absolute; top: calc(50% - 1.75rem); transform: translateY(-50%);
+  width: 2.5rem; height: 2.5rem; padding: 0; border: 0; background: none; cursor: pointer;
+  color: #fff; font-size: 2.5rem; line-height: 1; text-shadow: 0 1px 6px rgb(0 0 0 / .6);
+}
+.karrusel__pil--forrige { left: .5rem; }
+.karrusel__pil--naeste { right: .5rem; }
+.karrusel__prikker { display: flex; justify-content: center; gap: .6rem; margin-top: 1rem; }
+.karrusel__prik {
+  width: .5rem; height: .5rem; padding: 0; border: 0; border-radius: 50%;
+  background: #9a9894; cursor: pointer;
+}
+.karrusel__prik[aria-current="true"] { background: var(--accent); }
+
+/* Hvorfor vælge os? */
+.hvorfor { text-align: center; }
+.hvorfor h3 { margin-bottom: 2.5rem; }
+.hvorfor h4 {
+  margin-top: 0;
+  padding-top: 3.25rem;
+  background: url(/Vulcanus-draft/assets/favicon.svg) no-repeat center top / 2.5rem 2.5rem;
+}
+
+/* Mørk "Vil du høre mere?"-boks */
+.opringning { background: var(--mørk); color: #fff; padding: 1.75rem 1.5rem; }
+.opringning h2 { color: #fff; font-size: 1.5rem; }
+.opringning .formular-info { font-size: .8rem; }
+.opringning .formular-info a { color: #fff; }
+
+/* --- Formularer --------------------------------------------------------- */
+.felt-raekke { display: grid; gap: 0 1rem; }
+.felt { margin: 0 0 1rem; }
+.felt input, .felt textarea {
+  width: 100%; font: inherit; color: var(--overskrift);
+  padding: .7rem .8rem; border: 1px solid var(--kant); border-radius: 0;
+  background: var(--flade);
+}
+.opringning .felt input { background: #fff; border-color: #fff; }
+.felt textarea { resize: vertical; }
+.formular-info { font-size: .85rem; margin: 0 0 1rem; }
+button[type="submit"] { width: 100%; }
+/* Honeypot: flyttes ud af skærmen, IKKE display:none — det genkender mange bots */
+.fnugfelt { position: absolute; left: -9999px; }
+
+/* Kontaktsiden */
+.kontaktkort { display: grid; background: #fff; box-shadow: 0 0 30px rgb(0 0 0 / .06); padding: .75rem; }
+.kontaktkort__info { background: var(--flade); padding: 2.5rem 2rem; }
+.kontaktkort__info h2 { font-size: 1.6rem; }
+.kontaktkort__links a { font-weight: 700; font-size: 1.1rem; text-decoration: none; }
+.kontaktkort__formular { padding: 2.5rem 2rem; }
+.kontaktkort__formular h2 { font-size: 1.05rem; font-weight: 700; color: var(--tekst); margin-bottom: 1rem; }
+.kortudsnit { margin: 1.5rem 0 0; }
+.kortudsnit__ramme { aspect-ratio: 4 / 3; background: var(--kant); }
+.kortudsnit iframe { display: block; width: 100%; height: 100%; border: 0; }
+.kortudsnit p { margin: .5rem 0 0; font-size: .9rem; }
+/* Kortets plads, før der er givet samtykke (samtykke.js) */
+.kortudsnit__samtykke {
+  height: 100%; display: flex; flex-direction: column; justify-content: center;
+  align-items: center; gap: 1rem; padding: 1.5rem; text-align: center;
+}
+.kortudsnit__samtykke p { margin: 0; }
+.kortudsnit__samtykke .knap { padding: .75rem 1.5rem; }
+
+/* Cookiebanner (samtykke.js) */
+[hidden] { display: none !important; }
+.cookiebanner {
+  position: fixed; inset: auto 0 0 0; z-index: 50;
+  background: var(--mørk); color: #fff;
+  box-shadow: 0 -4px 30px rgb(0 0 0 / .2);
+}
+.cookiebanner__indre { max-width: var(--maks); margin-inline: auto; padding: 1.25rem var(--luft); }
+.cookiebanner__titel { color: #fff; font-size: 1.1rem; margin: 0 0 .5rem; }
+.cookiebanner p { font-size: .9rem; margin: 0 0 .75rem; }
+.cookiebanner a { color: #fff; }
+.cookiebanner__knapper { display: flex; flex-wrap: wrap; gap: .75rem; margin: 0; }
+.cookiebanner .knap { padding: .75rem 1.75rem; cursor: pointer; }
+.knap--sekundaer { background: transparent; color: #fff; box-shadow: inset 0 0 0 2px #fff; }
+.knap--sekundaer:hover { background: rgb(255 255 255 / .12); }
+.sidefod__cookies { margin: .5rem 0 0; }
+.linkknap {
+  background: none; border: 0; padding: 0; cursor: pointer;
+  font: inherit; font-size: .85rem; color: rgb(255 255 255 / .6); text-decoration: underline;
+}
+.linkknap:hover { color: #fff; }
+
+/* Almindelige tekstsider */
+.brødtekst { max-width: 50rem; }
+.brødtekst h2 { margin-top: 2rem; }
+
+/* Forsidens spørgsmål-og-svar-sektioner: .brødtekst inde i en .blok */
+.blok .brødtekst > h2:first-child, .blok .streg-top > h2:first-child { margin-top: 0; }
+.blok .brødtekst > :last-child { margin-bottom: 0; }
+.blok .ramme + .ramme, .blok .brødtekst + .streg-top, .blok .to-kol + .kilder,
+.blok .brødtekst + .kilder { margin-top: 3rem; }
+.byline + h2 { margin-top: 2rem; }
+.faq h3:first-child { margin-top: 0; }
+/* "Om forfatteren": samme opbygning som portrættet på profilsiden, men mindre. */
+.forfatter .portraet { max-width: 14rem; }
+.kilder { font-size: .9rem; }
+
+/* Sammenligningstabel. Ruller vandret på smalle skærme i stedet for at
+ * sprænge sidens bredde. */
+.tabel-rul { overflow-x: auto; margin-top: 1.5rem; }
+.tabel-rul table { width: 100%; min-width: 44rem; border-collapse: collapse; background: var(--hvid); font-size: .95rem; }
+.tabel-rul th, .tabel-rul td { padding: .75rem 1rem; text-align: left; vertical-align: top; border: 1px solid var(--kant); }
+.tabel-rul th { font-family: var(--font-titel); color: #fff; background: var(--mørk); }
+.tabel-rul td:first-child { font-weight: 700; color: var(--overskrift); }
+
+/* --- Sidefod ------------------------------------------------------------ */
+.sidefod { background: var(--mørk); color: #fff; padding-top: 4rem; }
+.sidefod__kolonner { display: grid; gap: 2.5rem; padding-bottom: 3rem; }
+.sidefod__titel { color: #fff; font-size: 1.5rem; font-weight: 800; margin-bottom: 1.25rem; }
+.sidefod p { font-size: .9rem; }
+.sidefod a, .sidefod__accent { color: var(--accent); text-decoration: none; }
+.sidefod__links { list-style: none; padding: 0; margin: 0; display: grid; gap: 0 1.5rem; }
+.sidefod__links li { border-bottom: 1px solid rgb(255 255 255 / .15); margin: 0; }
+.sidefod__links a { display: block; padding: .5rem 0; font-weight: 700; font-size: .9rem; }
+.sidefod__links a::before { content: "›"; margin-right: .5rem; }
+.sidefod__bund { border-top: 1px solid rgb(255 255 255 / .15); padding-block: 1.5rem; text-align: center; }
+.ophav { margin: 0; color: rgb(255 255 255 / .6); font-weight: 700; font-size: .85rem; }
+
+/* --- Større skærme ------------------------------------------------------ */
+@media (min-width: 700px) {
+  .to-kol { grid-template-columns: 1fr 1fr; gap: 3rem; }
+  .to-kol--boks { grid-template-columns: 2fr 1fr; }
+  .to-kol--portraet { grid-template-columns: 1fr 2fr; }
+  .to-kol--portraet.forfatter { grid-template-columns: 14rem 1fr; }
+  .tre-kol, .kort-raekke { grid-template-columns: repeat(3, 1fr); }
+  .vaerdier { grid-template-columns: 1fr 1fr; }
+  .felt-raekke { grid-template-columns: 1fr 1fr; }
+  .karrusel { --synlige: 2; }
+  .kontaktkort { grid-template-columns: 2fr 3fr; }
+  .sidefod__kolonner { grid-template-columns: 2fr 1.2fr 2.2fr; }
+  .sidefod__links { grid-template-columns: 1fr 1fr; }
+}
+
+@media (max-width: 699px) {
+  .topbar__indre { justify-content: center; }
+  .sidehoved { justify-content: center; }
+  .sidehoved nav ul { justify-content: center; }
+  .sidehoved .logo img { width: 160px; }
+  .hero--forside { min-height: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+}
+
+.kontaktkort__formular form + p { font-size: .85rem; margin-top: .75rem; }
+
+/* --- Heroens billedskift (forsiden) --------------------------------------
+ * Billederne toner over i hinanden, mens hvert billede langsomt zoomer ind —
+ * som på den nuværende forside. Ren CSS, intet JavaScript. Hvert billede har
+ * et vindue på 6s; det første starter 1.5s inde, så siden ikke begynder mørk.
+ * Genereret for 2–5 billeder (pages.yaml → hero + hero_bilder, max 5 i alt).
+ */
+.hero__slide { position: absolute; inset: 0; opacity: 0; transform-origin: 50% 45%; }
+.hero__slide:first-child { opacity: 1; }
+.hero__slide picture, .hero__slide img { position: absolute; inset: 0; width: 100%; height: 100%; }
+.hero__slide img { object-fit: cover; }
+
+@keyframes hero-skift-2 {
+  0% { opacity: 0; transform: scale(1); }
+  12.500% { opacity: 1; }
+  50.000% { opacity: 1; }
+  62.500% { opacity: 0; transform: scale(1.15); }
+  100% { opacity: 0; transform: scale(1.15); }
+}
+.hero__skift--2 .hero__slide { animation: hero-skift-2 12s linear infinite; }
+.hero__skift--2 .hero__slide:nth-child(1) { animation-delay: -1.5s; }
+.hero__skift--2 .hero__slide:nth-child(2) { animation-delay: 4.5s; }
+@keyframes hero-skift-3 {
+  0% { opacity: 0; transform: scale(1); }
+  8.333% { opacity: 1; }
+  33.333% { opacity: 1; }
+  41.667% { opacity: 0; transform: scale(1.15); }
+  100% { opacity: 0; transform: scale(1.15); }
+}
+.hero__skift--3 .hero__slide { animation: hero-skift-3 18s linear infinite; }
+.hero__skift--3 .hero__slide:nth-child(1) { animation-delay: -1.5s; }
+.hero__skift--3 .hero__slide:nth-child(2) { animation-delay: 4.5s; }
+.hero__skift--3 .hero__slide:nth-child(3) { animation-delay: 10.5s; }
+@keyframes hero-skift-4 {
+  0% { opacity: 0; transform: scale(1); }
+  6.250% { opacity: 1; }
+  25.000% { opacity: 1; }
+  31.250% { opacity: 0; transform: scale(1.15); }
+  100% { opacity: 0; transform: scale(1.15); }
+}
+.hero__skift--4 .hero__slide { animation: hero-skift-4 24s linear infinite; }
+.hero__skift--4 .hero__slide:nth-child(1) { animation-delay: -1.5s; }
+.hero__skift--4 .hero__slide:nth-child(2) { animation-delay: 4.5s; }
+.hero__skift--4 .hero__slide:nth-child(3) { animation-delay: 10.5s; }
+.hero__skift--4 .hero__slide:nth-child(4) { animation-delay: 16.5s; }
+@keyframes hero-skift-5 {
+  0% { opacity: 0; transform: scale(1); }
+  5.000% { opacity: 1; }
+  20.000% { opacity: 1; }
+  25.000% { opacity: 0; transform: scale(1.15); }
+  100% { opacity: 0; transform: scale(1.15); }
+}
+.hero__skift--5 .hero__slide { animation: hero-skift-5 30s linear infinite; }
+.hero__skift--5 .hero__slide:nth-child(1) { animation-delay: -1.5s; }
+.hero__skift--5 .hero__slide:nth-child(2) { animation-delay: 4.5s; }
+.hero__skift--5 .hero__slide:nth-child(3) { animation-delay: 10.5s; }
+.hero__skift--5 .hero__slide:nth-child(4) { animation-delay: 16.5s; }
+.hero__skift--5 .hero__slide:nth-child(5) { animation-delay: 22.5s; }
+
+/* Et enkelt billede: ingen overtoning, kun den langsomme zoom. */
+.hero__skift--1 .hero__slide { animation: hero-zoom 20s ease-out forwards; }
+@keyframes hero-zoom { from { transform: scale(1); } to { transform: scale(1.1); } }
+
+/* Forsidens hero fylder skærmen, med en pil ned til indholdet. */
+.hero--forside { min-height: calc(100vh - 6.5rem); min-height: calc(100svh - 6.5rem); }
+.hero--forside::after { background: rgb(40 40 40 / .5); }
+.hero__pil {
+  position: absolute; left: 50%; bottom: 1.25rem; transform: translateX(-50%);
+  width: 2.5rem; height: 2.5rem; color: #fff;
+  animation: hero-pil 2s ease-in-out infinite;
+}
+.hero__pil svg { width: 100%; height: 100%; fill: currentColor; }
+@keyframes hero-pil { 0%, 100% { translate: 0 0; } 50% { translate: 0 .4rem; } }
+#forside-indhold { scroll-margin-top: 0; }
+html { scroll-behavior: smooth; }
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  /* Kun det første billede, stillestående. */
+  .hero__slide { animation: none !important; transform: none !important; }
+  .hero__slide:not(:first-child) { display: none; }
+}
+
+@media (min-width: 1025px) {
+  .karrusel { --synlige: 4; }
+}
+
+/* Lysboks: billedet i fuld størrelse (karrusel.js) */
+.karrusel__link { display: block; cursor: zoom-in; }
+.lysboks {
+  width: 100vw; height: 100vh; max-width: none; max-height: none;
+  margin: 0; padding: 3rem 4rem; border: 0; background: transparent;
+  place-items: center;
+}
+.lysboks[open] { display: grid; }
+.lysboks::backdrop { background: rgb(0 0 0 / .9); }
+.lysboks__billede {
+  max-width: 100%; max-height: calc(100vh - 7rem); width: auto; height: auto;
+  box-shadow: 0 0 30px rgb(0 0 0 / .5);
+}
+.lysboks button {
+  position: fixed; padding: 0; border: 0; background: none; cursor: pointer;
+  color: #fff; line-height: 1; opacity: .85;
+}
+.lysboks button:hover, .lysboks button:focus-visible { opacity: 1; }
+.lysboks__luk { top: 1rem; right: 1.25rem; font-size: 2.5rem; }
+.lysboks__pil { top: 50%; transform: translateY(-50%); font-size: 3.5rem; }
+.lysboks__pil--forrige { left: 1rem; }
+.lysboks__pil--naeste { right: 1rem; }
+.lysboks__taeller {
+  position: fixed; bottom: 1rem; left: 0; right: 0; margin: 0;
+  text-align: center; color: rgb(255 255 255 / .8); font-size: .85rem;
+}
+@media (max-width: 699px) {
+  .lysboks { padding: 3rem .5rem; }
+  .lysboks__pil { top: auto; bottom: .25rem; transform: none; }
+}
