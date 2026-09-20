@@ -102,6 +102,7 @@
 .vs-sub {
   position: absolute; top: calc(66svh + 0.9rem); max-width: 21rem;
   font-size: clamp(1.02rem, 0.95rem + 0.35vw, 1.22rem); line-height: 1.45; color: rgb(255 255 255 / 0.92);
+  text-wrap: balance;   /* 'skadekonsulent' is a long word: no single word left alone on the second line */
 }
 .vs-sub > span { display: block; animation: vs-fade 900ms var(--sc-ease-out) 520ms both; }
 @keyframes vs-fade { from { opacity: 0; } to { opacity: 1; } }
@@ -483,6 +484,12 @@
 .vs-beat--r { top: calc(var(--vs-top) + clamp(1.5rem, 7svh, 4.5rem)); max-width: 35rem; }
 .vs-beat--r p:not(.vs-h2):not(.vs-lede) { color: var(--vs-warm-soft); }
 .vs-beat--r .vs-link { color: var(--vs-flame-deep); }
+/* The direct answer and the byline come FIRST in the source, right after the <h1>
+   (GEO: an engine reads the answer before the slogans). On screen they stay where
+   they were, under the welcome lines: the box is a column, and 'order' puts them last. */
+.vs-beat--r { display: flex; flex-direction: column; gap: 0.85rem; }
+.vs-beat--r > * + * { margin-top: 0; }
+.vs-beat--r > :is(.v2-svar, .byline, .v2-laes) { order: 1; }
 
 /* ledger */
 .vs-ledger__head { padding-top: clamp(2.5rem, 5vw, 4rem); padding-bottom: 1.5rem; }
@@ -582,6 +589,8 @@
   .vs-close__copy { top: calc(var(--vs-top) + (100svh - var(--vs-top)) * 0.3 + 17svh + 2rem); }
   .vs-beat { left: var(--sc-gutter); right: var(--sc-gutter); max-width: none; text-align: left; font-size: 0.93rem; line-height: 1.5; }
   .vs-beat > * + * { margin-top: 0.6rem; }
+  .vs-beat--r { gap: 0.6rem; }
+  .vs-beat--r > * + * { margin-top: 0; }
   .vs-beat .vs-h2 { font-size: 1.32rem; }
   .vs-beat .vs-lede { font-size: 1rem; }
   .vs-beat--l { top: auto; bottom: calc(100svh - var(--seam-y) + 1.2rem); }
@@ -764,8 +773,8 @@
   /* Et halvt telefonskærmbillede: intro, forfatter og link skal med. Linjen om
      gratis screening står allerede som knap i heroen, og sætningen om
      eksaminerede skadekonsulenter vender tilbage i regnskabet lige under. */
-  .vs-beat--r > .hero__screening, .vs-beat--r > p:nth-of-type(4) { display: none; }
-  .vs-beat--r > p:nth-of-type(5) { font-size: 0.9rem; line-height: 1.45; }
+  .vs-beat--r > .hero__screening, .vs-beat--r > .v2-gentaget { display: none; }
+  .vs-beat--r > .v2-svar { font-size: 0.9rem; line-height: 1.45; }
   .vs-beat--r .byline { font-size: 0.8rem; }
   .vs-cell--cold.vs-ledger__head h2, .vs-steps-act .vs-cell--cold h2, .vs-cell--cold.vs-ledger__head p, .vs-steps-act .vs-cell--cold p, .vs-row h3.vs-row__claim { margin-left: 0; }
   .vs-gauge-about h2 { font-size: 1.22rem; }
