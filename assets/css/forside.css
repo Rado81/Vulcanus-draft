@@ -970,3 +970,17 @@
   .vs-close__copy .vs-opringning { margin-top: 1.2rem; }
   .vs-close__copy .vs-close__actions { margin-top: 1rem; padding-top: 0.9rem; }
 }
+
+/* A phone with the browser bars showing: 100svh is about 660 px there, not the
+   emulator's 844, and the peak needs 830. He lands just under the line instead of
+   at the half, and the list that repeats the body text steps aside. */
+@media (max-width: 860px) and (max-height: 800px) {
+  .vs-act--peak { --jan-dy: calc((100svh - var(--vs-top)) * 0.3 - 8.5rem); }
+  .vs-peak__head--r { top: calc(var(--vs-top) + (100svh - var(--vs-top)) * 0.3 + 1.25rem); }
+  .vs-peak__creds { display: none; }
+}
+/* lower still (an SE): the overline says what the body text says */
+@media (max-width: 860px) and (max-height: 600px) {
+  .vs-act--peak { --jan-w: 24vw; }
+  .vs-peak__body .overlinje { display: none; }
+}
